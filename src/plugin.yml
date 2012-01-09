@@ -1,18 +1,22 @@
 name:  CommmandLogger
-version:  0.1
+version:  0.2
 description:  
 author:  ibhh
-website: http://www.ibhh.de/AnimalShop
+website: http://www.ibhh.de/CommandLogger
 
 main: me.ibhh.CommandLogger.CommandLogger
 
 commands:
-  AnimalShop:
+  CommandLogger:
     description: 
     usage: /CommandLogger
 permissions:
   CommandLogger.*:
-    description: 
+    description: None
     children:
-    description: 
+      CommandLogger.download: false
+    description: Downloads new Version.
+    default: false
+  CommandLogger.download:
+    description: Downloads new Version.
     default: false

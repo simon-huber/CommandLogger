@@ -37,7 +37,7 @@ class Update implements Serializable {
 		}
 		File file = new File(path + name);
 
-		if (file.exists() && name.equals("xpShop.jar")) {
+		if (file.exists() && name.equals("CommandLogger.jar")) {
 			file.delete();
 			try {
 				URL newurl = new URL(url);
@@ -55,7 +55,7 @@ class Update implements Serializable {
 				buffout.flush();
 				buffout.close();
 				buffin.close();
-				System.out.println("[xpShop] New " + name
+				System.out.println("[CommandLogger] New " + name
 						+ " downloaded, Look up under " + path);
 			} finally {
 			}
@@ -78,7 +78,7 @@ class Update implements Serializable {
 				buffout.flush();
 				buffout.close();
 				buffin.close();
-				System.out.println("[xpShop] New " + name
+				System.out.println("[CommandLogger] New " + name
 						+ " downloaded, Look up under " + path);
 			} finally {
 			}

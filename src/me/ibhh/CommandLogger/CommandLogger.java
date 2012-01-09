@@ -1,14 +1,7 @@
 package me.ibhh.CommandLogger;
 
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileWriter;
-import java.util.Date;
-import org.bukkit.ChatColor;
-import org.bukkit.block.Sign;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
-import org.bukkit.entity.CreatureType;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
 import org.bukkit.plugin.PluginManager;
@@ -18,7 +11,7 @@ public class CommandLogger extends JavaPlugin {
 
     public float Version = 0.0F;
     public static PluginManager pm;
-    private String Stream;
+    private CommandPlayerListener playerListener;
 
     @Override
     public void onDisable() {
@@ -47,7 +40,9 @@ public class CommandLogger extends JavaPlugin {
         } catch (Exception e) {
             e.printStackTrace();
         }
-
+        this.playerListener = new CommandPlayerListener(this);
+        PluginManager pm1 = getServer().getPluginManager();
+        pm1.registerEvent(Event.Type.PLAYER_COMMAND_PREPROCESS, this.playerListener, Event.Priority.Normal, this);
         System.out.println("[CommandLogger] Version: " + this.Version
                 + " successfully enabled!");
 
@@ -94,25 +89,7 @@ public class CommandLogger extends JavaPlugin {
 
     @Override
     public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
-        if ((sender instanceof Player)) {
-            Player player = (Player) sender;
-            String Playername = player.getDisplayName();
-            if (getConfig().getBoolean("all") || getConfig().getBoolean(Playername)) {
-                Date now = new Date();
-                Stream = now.toString();
-                File file = new File(getDataFolder().toString() + sender.getName());
-                try {
-                    // Create file
-                    FileWriter fstream = new FileWriter(sender.getName() + ".txt");
-                    BufferedWriter out = new BufferedWriter(fstream);
-                    out.write("[" + Stream + "] " + args);
-                    //Close the output stream
-                    out.close();
-                } catch (Exception e) {//Catch exception if any
-                    System.err.println("Error: " + e.getMessage());
-                }
-            }
-        } else if ((isConsole(sender))
+        if ((isConsole(sender))
                 && (cmd.getName().equalsIgnoreCase("CommandLogger"))
                 && (args.length == 1)
                 && (args[0].equals("download"))) {
