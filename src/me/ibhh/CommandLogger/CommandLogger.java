@@ -1,6 +1,9 @@
 package me.ibhh.CommandLogger;
 
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileWriter;
+import java.util.Date;
 import org.bukkit.ChatColor;
 import org.bukkit.block.Sign;
 import org.bukkit.command.Command;
@@ -15,10 +18,11 @@ public class CommandLogger extends JavaPlugin {
 
     public float Version = 0.0F;
     public static PluginManager pm;
+    private String Stream;
 
     @Override
     public void onDisable() {
-        System.out.println("[AnimalShop] disabled!");
+        System.out.println("[CommandLogger] disabled!");
     }
 
     public boolean UpdateConfig() {
@@ -26,7 +30,7 @@ public class CommandLogger extends JavaPlugin {
             getConfig().options().copyDefaults(true);
             saveConfig();
             reloadConfig();
-            System.out.println("[AnimalShop] Config file found!");
+            System.out.println("[CommandLogger] Config file found!");
 
             return true;
         } catch (Exception e) {
@@ -44,30 +48,29 @@ public class CommandLogger extends JavaPlugin {
             e.printStackTrace();
         }
 
-        System.out.println("[AnimalShop] Version: " + this.Version
+        System.out.println("[CommandLogger] Version: " + this.Version
                 + " successfully enabled!");
 
-        String URL = "http://ibhh.de:80/aktuelleversionAnimalShop.html";
+        String URL = "http://ibhh.de:80/aktuelleversionCommandLogger.html";
         if (Update.UpdateAvailable(URL, this.Version)) {
-            System.out.println("[AnimalShop] New version: "
+            System.out.println("[CommandLogger] New version: "
                     + Update.getNewVersion(URL) + " found!");
-            System.out.println("[AnimalShop] ******************************************");
-            System.out.println("[AnimalShop] *********** Please update!!!! ************");
-            System.out.println("[AnimalShop] * http://ibhh.de/AnimalShop.jar *");
-            System.out.println("[AnimalShop] ******************************************");
+            System.out.println("[CommandLogger] ******************************************");
+            System.out.println("[CommandLogger] *********** Please update!!!! ************");
+            System.out.println("[CommandLogger] * http://ibhh.de/CommandLogger.jar *");
+            System.out.println("[CommandLogger] ******************************************");
             if (getConfig().getBoolean("autodownload")) {
                 try {
                     String path = getDataFolder().toString() + "/Update/";
-                    Update.autoUpdate("http://ibhh.de/AnimalShop.jar", path,
-                            "AnimalShop.jar");
+                    Update.autoUpdate("http://ibhh.de/CommandLogger.jar", path,
+                            "CommandLogger.jar");
                 } catch (Exception e) {
-                    System.out.println("[AnimalShop] Error on checking permissions with PermissionsEx!");
+                    System.out.println("[CommandLogger] Error on checking permissions with PermissionsEx!");
 
                     e.printStackTrace();
-                    return;
                 }
             } else {
-                System.out.println("[AnimalShop] Please type [AnimalShop download] to download manual! ");
+                System.out.println("[CommandLogger] Please type [CommandLogger download] to download manual! ");
             }
         }
     }
@@ -76,7 +79,7 @@ public class CommandLogger extends JavaPlugin {
         try {
             this.Version = Float.parseFloat(getDescription().getVersion());
         } catch (Exception e) {
-            System.out.println("[AnimalShop]Could not parse version in float");
+            System.out.println("[CommandLogger]Could not parse version in float");
         }
         return this.Version;
     }
@@ -92,20 +95,32 @@ public class CommandLogger extends JavaPlugin {
     @Override
     public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
         if ((sender instanceof Player)) {
-            File file = new File(getDataFolder().toString() + sender.getName());
-
-            if (file.exists()) {
-            } else {
+            Player player = (Player) sender;
+            String Playername = player.getDisplayName();
+            if (getConfig().getBoolean("all") || getConfig().getBoolean(Playername)) {
+                Date now = new Date();
+                Stream = now.toString();
+                File file = new File(getDataFolder().toString() + sender.getName());
+                try {
+                    // Create file
+                    FileWriter fstream = new FileWriter(sender.getName() + ".txt");
+                    BufferedWriter out = new BufferedWriter(fstream);
+                    out.write("[" + Stream + "] " + args);
+                    //Close the output stream
+                    out.close();
+                } catch (Exception e) {//Catch exception if any
+                    System.err.println("Error: " + e.getMessage());
+                }
             }
         } else if ((isConsole(sender))
-                && (cmd.getName().equalsIgnoreCase("AnimalShop"))
+                && (cmd.getName().equalsIgnoreCase("CommandLogger"))
                 && (args.length == 1)
                 && (args[0].equals("download"))) {
             String path = getDataFolder().toString()
                     + "/Update/";
             Update.autoUpdate(
-                    "http://ibhh.de/AnimalShop.jar", path,
-                    "AnimalShop.jar");
+                    "http://ibhh.de/CommandLogger.jar", path,
+                    "CommandLogger.jar");
         }
         return false;
     }
