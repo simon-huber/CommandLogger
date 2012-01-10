@@ -22,8 +22,17 @@ public class CommandPlayerListener extends PlayerListener {
         Player p = event.getPlayer();
         String Playername = p.getDisplayName();
         String Command = event.getMessage();
-        if (plugin.getConfig().getBoolean("all") || plugin.getConfig().getBoolean(Playername)) {
-            Date now = new Date();
+        if (plugin.getConfig().getBoolean("all") && plugin.getConfig().getBoolean(Playername)) {
+            writeLog(Playername, Command);
+        }
+        else if(!plugin.getConfig().getBoolean("all") && plugin.getConfig().getBoolean(Playername))
+        {
+            writeLog(Playername, Command);
+        }
+    }
+    public void writeLog(String Playername, String Command)
+    {
+                    Date now = new Date();
             String Stream = now.toString();
             String path = plugin.getDataFolder().toString() + "/";
             File file = new File(path + Playername + ".txt");
@@ -44,6 +53,5 @@ public class CommandPlayerListener extends PlayerListener {
             } catch (Exception e) {//Catch exception if any
                 System.out.println("Error: " + e.getMessage());
             }
-        }
     }
 }
