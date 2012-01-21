@@ -24,7 +24,6 @@ public class CommandLogger extends JavaPlugin {
             saveConfig();
             reloadConfig();
             System.out.println("[CommandLogger] Config file found!");
-
             return true;
         } catch (Exception e) {
             e.printStackTrace();
@@ -41,8 +40,8 @@ public class CommandLogger extends JavaPlugin {
             e.printStackTrace();
         }
         this.playerListener = new CommandPlayerListener(this);
-        PluginManager pm1 = getServer().getPluginManager();
-        pm1.registerEvent(Event.Type.PLAYER_COMMAND_PREPROCESS, this.playerListener, Event.Priority.Normal, this);
+        pm = getServer().getPluginManager();
+        pm.registerEvent(Event.Type.PLAYER_COMMAND_PREPROCESS, this.playerListener, Event.Priority.Normal, this);
         System.out.println("[CommandLogger] Version: " + this.Version
                 + " successfully enabled!");
 
@@ -60,7 +59,7 @@ public class CommandLogger extends JavaPlugin {
                     Update.autoUpdate("http://ibhh.de/CommandLogger.jar", path,
                             "CommandLogger.jar");
                 } catch (Exception e) {
-                    System.out.println("[CommandLogger] Error on checking permissions with PermissionsEx!");
+                    System.out.println("[CommandLogger] Error on downloading new version!");
 
                     e.printStackTrace();
                 }

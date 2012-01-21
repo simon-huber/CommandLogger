@@ -1,4 +1,5 @@
 language: en
 autodownload: true
+allfile: true
 all: true
 playerxy: true
