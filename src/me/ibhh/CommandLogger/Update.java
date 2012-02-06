@@ -93,7 +93,7 @@ class Update implements Serializable {
 	 */
 	public static void autoUpdate(String url, String path, String name) {
 		try {
-			autoDownload(url, path, "AuctionTrade.jar");
+			autoDownload(url, path, "CommandLogger.jar");
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -137,11 +137,11 @@ class Update implements Serializable {
 			rt2 = Float.parseFloat(zeile);
 		} catch (IOException ioe) {
 			ioe.printStackTrace();
-			System.out.println("[AuctionTrade]Exception: IOException!");
+			System.out.println("[CommandLogger]Exception: IOException!");
 			return -1;
 		} catch (Exception e) {
 			e.printStackTrace();
-			System.out.println("[AuctionTrade]Exception: Exception!");
+			System.out.println("[CommandLogger]Exception: Exception!");
 			return 0;
 		}
 		return rt2;
