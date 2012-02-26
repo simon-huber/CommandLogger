@@ -6,22 +6,25 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Date;
 import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
+import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
-import org.bukkit.event.player.PlayerListener;
 
-public class CommandPlayerListener extends PlayerListener {
+public class CommandPlayerListener implements Listener {
 
     private final CommandLogger plugin;
     double doubeline;
 
     public CommandPlayerListener(CommandLogger plugin) {
         this.plugin = plugin;
+        plugin.getServer().getPluginManager().registerEvents(this, plugin);
     }
 
-    @Override
-    public void onPlayerCommandPreprocess(PlayerCommandPreprocessEvent event) {
+    @EventHandler(priority = EventPriority.HIGH)
+    public void onCommandPreprocess(PlayerCommandPreprocessEvent event) {
         Player p = event.getPlayer();
-        String Playername = p.getDisplayName();
+        String Playername = p.getName();
         String Command = event.getMessage();
         if ((plugin.getConfig().getBoolean("all")) || (plugin.getConfig().getBoolean(Playername))) {
             writeLog(Playername, Command);

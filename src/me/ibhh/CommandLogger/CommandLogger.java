@@ -40,8 +40,6 @@ public class CommandLogger extends JavaPlugin {
             e.printStackTrace();
         }
         this.playerListener = new CommandPlayerListener(this);
-        pm = getServer().getPluginManager();
-        pm.registerEvent(Event.Type.PLAYER_COMMAND_PREPROCESS, this.playerListener, Event.Priority.Normal, this);
         System.out.println("[CommandLogger] Version: " + this.Version
                 + " successfully enabled!");
 
