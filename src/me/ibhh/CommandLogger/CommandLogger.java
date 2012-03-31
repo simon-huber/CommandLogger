@@ -3,7 +3,6 @@ package me.ibhh.CommandLogger;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.bukkit.event.Event;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -65,8 +64,17 @@ public class CommandLogger extends JavaPlugin {
                 System.out.println("[CommandLogger] Please type [CommandLogger download] to download manual! ");
             }
         }
+            startStatistics();
     }
 
+    private void startStatistics() {
+        try {
+            new Metrics().beginMeasuringPlugin(this);
+        } catch (Exception ex) {
+            System.out.println(" [CommandLogger] There was an error while submitting statistics.");
+        }
+    }
+    
     public float aktuelleVersion() {
         try {
             this.Version = Float.parseFloat(getDescription().getVersion());
