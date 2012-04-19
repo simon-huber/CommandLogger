@@ -1,5 +1,6 @@
 language: en
 autodownload: true
+showcommandsonconsole: true
 allfile: true
 all: true
 playerxy: true

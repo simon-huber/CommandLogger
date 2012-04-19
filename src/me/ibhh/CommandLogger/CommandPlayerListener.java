@@ -1,10 +1,8 @@
 package me.ibhh.CommandLogger;
 
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.util.Date;
+import java.sql.SQLException;
+import java.util.logging.Level;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -27,51 +25,53 @@ public class CommandPlayerListener implements Listener {
         String Playername = p.getName();
         String Command = event.getMessage();
         if ((plugin.getConfig().getBoolean("all")) || (plugin.getConfig().getBoolean(Playername))) {
-            writeLog(Playername, Command);
+            String world = event.getPlayer().getLocation().getWorld().getName();
+            int X = event.getPlayer().getLocation().getBlockX();
+            int Y = event.getPlayer().getLocation().getBlockY();
+            int Z = event.getPlayer().getLocation().getBlockZ();
+            plugin.writeLog(Playername, Command, world, X, Y, Z);
+            if (plugin.getConfig().getBoolean("showcommandsonconsole")) {
+                System.out.println("[CommandLogger] Player: " + Playername + " Command: " + Command);
+            }
+            sendMessagetoop("Player: " + Playername + " Command: " + Command, Playername);
         }
     }
 
-    public void writeLog(String Playername, String Command) {
-        Date now = new Date();
-        String Stream = now.toString();
-        String path = plugin.getDataFolder().toString() + "/";
-        File file1 = new File(path + "allfile" + ".txt");
-        File file = new File(path + Playername + ".txt");
-        if (!file.exists()) {
-            try {
-                file.createNewFile();
-            } catch (IOException ex) {
-                System.out.println("Error: " + ex.getMessage());
+    public void sendMessagetoop(final String msg, final String playername) {
+        plugin.getServer().getScheduler().scheduleAsyncDelayedTask(plugin, new Runnable() {
+
+            @Override
+            public void run() {
+                for (Player player : Bukkit.getServer().getOnlinePlayers()) {
+                    if (plugin.permissionsChecker.checkpermissionssilent(player, "CommandLogger.spy")) {
+                        try {
+                            if (plugin.SQL.isindb(player.getName())) {
+                                int temp = plugin.SQL.getToggle(player.getName());
+                                if (temp == 1) {
+                                    if (plugin.SQL.isinplayersdb(player.getName(), playername)) {
+                                        if (plugin.SQL.getToggleDB(player.getName(), playername) == 1) {
+                                            plugin.PlayerLogger(player, msg, "");
+                                        }
+                                    } else {
+                                        if (plugin.SQL.getToggleDB(player.getName(), "all") == 1) {
+                                            plugin.PlayerLogger(player, msg, "");
+                                        }
+                                    }
+                                }
+                            } else {
+                                plugin.SQL.InsertAuction(player.getName(), 0);
+                                plugin.SQL.PrepareDBPlayersDB(player.getName());
+                                int temp = plugin.SQL.getToggle(player.getName());
+                                if (temp == 1) {
+                                    plugin.PlayerLogger(player, msg, "");
+                                }
+                            }
+                        } catch (SQLException ex) {
+                            java.util.logging.Logger.getLogger(CommandLogger.class.getName()).log(Level.SEVERE, null, ex);
+                        }
+                    }
+                }
             }
-        }
-        if (!file1.exists()) {
-            try {
-                file1.createNewFile();
-            } catch (IOException ex) {
-                System.out.println("Error: " + ex.getMessage());
-            }
-        }
-        try {
-            // Create file
-            FileWriter fstream = new FileWriter(file, true);
-            PrintWriter out = new PrintWriter(fstream);
-            out.println("[" + Stream + "] " + Command);
-            //Close the output stream
-            out.close();
-        } catch (Exception e) {//Catch exception if any
-            System.out.println("Error: " + e.getMessage());
-        }
-        if (plugin.getConfig().getBoolean("allfile")) {
-            try {
-                // Create file
-                FileWriter fstream1 = new FileWriter(file1, true);
-                PrintWriter out1 = new PrintWriter(fstream1);
-                out1.println("[" + Stream + "] " + Playername + " " + Command);
-                //Close the output stream
-                out1.close();
-            } catch (Exception e) {//Catch exception if any
-                System.out.println("Error: " + e.getMessage());
-            }
-        }
+        }, 0);
     }
 }
