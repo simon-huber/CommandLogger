@@ -1,5 +1,8 @@
 language: en
 autodownload: true
+UsePrefix: true
+PrefixColor: b
+TextColor: 6
 showcommandsonconsole: true
 allfile: true
 all: true

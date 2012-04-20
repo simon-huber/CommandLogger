@@ -21,6 +21,7 @@ public class CommandLogger extends JavaPlugin {
     private CommandPlayerListener playerListener;
     public PermissionsChecker permissionsChecker;
     public SQLConnectionHandler SQL;
+    public ChatColor Prefix, Text;
 
     @Override
     public void onDisable() {
@@ -28,6 +29,10 @@ public class CommandLogger extends JavaPlugin {
         System.out.println("[CommandLogger] disabled!");
     }
 
+    /** Creates and Updates the config.yml of CommandLogger
+     * 
+     * @return true if created, false if failed
+     */
     public boolean UpdateConfig() {
         try {
             getConfig().options().copyDefaults(true);
@@ -41,6 +46,9 @@ public class CommandLogger extends JavaPlugin {
         return false;
     }
 
+    /**
+     * Will be executed on enabling
+     */
     @Override
     public void onEnable() {
         UpdateConfig();
@@ -49,6 +57,8 @@ public class CommandLogger extends JavaPlugin {
         } catch (Exception e) {
             e.printStackTrace();
         }
+        Prefix = ChatColor.getByChar(getConfig().getString("PrefixColor"));
+        Text = ChatColor.getByChar(getConfig().getString("TextColor"));
         playerListener = new CommandPlayerListener(this);
         permissionsChecker = new PermissionsChecker(this, "main");
         SQL = new SQLConnectionHandler(this);
@@ -79,6 +89,11 @@ public class CommandLogger extends JavaPlugin {
         startStatistics();
     }
 
+    /**
+     * Intern logger to control Console writing
+     * @param msg
+     * @param TYPE 
+     */
     public void Logger(String msg, String TYPE) {
         if (TYPE.equalsIgnoreCase("Warning") || TYPE.equalsIgnoreCase("Error")) {
             System.err.println("[CommandLogger] " + TYPE + ": " + msg);
@@ -87,14 +102,32 @@ public class CommandLogger extends JavaPlugin {
         }
     }
 
+    /**
+     * Intern logger to send player messages and log it into file
+     *
+     * @param p
+     * @param msg
+     * @param TYPE
+     */
     public void PlayerLogger(Player p, String msg, String TYPE) {
         if (TYPE.equalsIgnoreCase("Error")) {
-            p.sendMessage(ChatColor.DARK_BLUE + "[CommandLogger] " + ChatColor.RED + "Error: " + ChatColor.GOLD + msg);
+            if (getConfig().getBoolean("UsePrefix")) {
+                p.sendMessage(Prefix + "[CommandLogger] " + ChatColor.RED + "Error: " + Text + msg);
+            } else {
+                p.sendMessage(ChatColor.RED + "Error: " + Text + msg);
+            }
         } else {
-            p.sendMessage(ChatColor.DARK_BLUE + "[CommandLogger] " + ChatColor.GOLD + msg);
+            if (getConfig().getBoolean("usePrefix")) {
+                p.sendMessage(Prefix + "[CommandLogger] " + Text + msg);
+            } else {
+                p.sendMessage(Text + msg);
+            }
         }
     }
 
+    /**
+     * Sends statistics to http://metrics.griefcraft.com
+     */
     private void startStatistics() {
         try {
             new Metrics().beginMeasuringPlugin(this);
@@ -103,6 +136,10 @@ public class CommandLogger extends JavaPlugin {
         }
     }
 
+    /**
+     * Reads the installed version
+     * @return version
+     */
     public float aktuelleVersion() {
         try {
             this.Version = Float.parseFloat(getDescription().getVersion());
@@ -119,6 +156,15 @@ public class CommandLogger extends JavaPlugin {
     protected static boolean isConsole(CommandSender sender) {
         return !(sender instanceof Player);
     }
+    
+    /**
+     * Commandexecutor of CommandLogger
+     * @param sender
+     * @param cmd
+     * @param label
+     * @param args
+     * @return false, if invalid command
+     */
 
     @Override
     public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
@@ -265,6 +311,16 @@ public class CommandLogger extends JavaPlugin {
         }
         return false;
     }
+    
+    /**
+     * Writes log into file
+     * @param Playername
+     * @param Command
+     * @param world
+     * @param X
+     * @param Y
+     * @param Z 
+     */
     public void writeLog(String Playername, String Command, String world, int X, int Y, int Z) {
         Date now = new Date();
         String Stream = now.toString();
