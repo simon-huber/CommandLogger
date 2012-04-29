@@ -22,15 +22,22 @@ public class CommandLogger extends JavaPlugin {
     public PermissionsChecker permissionsChecker;
     public SQLConnectionHandler SQL;
     public ChatColor Prefix, Text;
+    public Metrics metrics;
 
     @Override
     public void onDisable() {
         SQL.CloseCon();
+        try {
+            metrics.disable();
+        } catch (IOException ex) {
+            java.util.logging.Logger.getLogger(CommandLogger.class.getName()).log(Level.SEVERE, null, ex);
+        }
         System.out.println("[CommandLogger] disabled!");
     }
 
-    /** Creates and Updates the config.yml of CommandLogger
-     * 
+    /**
+     * Creates and Updates the config.yml of CommandLogger
+     *
      * @return true if created, false if failed
      */
     public boolean UpdateConfig() {
@@ -91,8 +98,9 @@ public class CommandLogger extends JavaPlugin {
 
     /**
      * Intern logger to control Console writing
+     *
      * @param msg
-     * @param TYPE 
+     * @param TYPE
      */
     public void Logger(String msg, String TYPE) {
         if (TYPE.equalsIgnoreCase("Warning") || TYPE.equalsIgnoreCase("Error")) {
@@ -117,7 +125,7 @@ public class CommandLogger extends JavaPlugin {
                 p.sendMessage(ChatColor.RED + "Error: " + Text + msg);
             }
         } else {
-            if (getConfig().getBoolean("usePrefix")) {
+            if (getConfig().getBoolean("UsePrefix")) {
                 p.sendMessage(Prefix + "[CommandLogger] " + Text + msg);
             } else {
                 p.sendMessage(Text + msg);
@@ -130,7 +138,9 @@ public class CommandLogger extends JavaPlugin {
      */
     private void startStatistics() {
         try {
-            new Metrics().beginMeasuringPlugin(this);
+            metrics = new Metrics(this);
+            metrics.enable();
+            metrics.start();
         } catch (Exception ex) {
             System.out.println(" [CommandLogger] There was an error while submitting statistics.");
         }
@@ -138,6 +148,7 @@ public class CommandLogger extends JavaPlugin {
 
     /**
      * Reads the installed version
+     *
      * @return version
      */
     public float aktuelleVersion() {
@@ -156,79 +167,43 @@ public class CommandLogger extends JavaPlugin {
     protected static boolean isConsole(CommandSender sender) {
         return !(sender instanceof Player);
     }
-    
+
     /**
      * Commandexecutor of CommandLogger
+     *
      * @param sender
      * @param cmd
      * @param label
      * @param args
      * @return false, if invalid command
      */
-
     @Override
     public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
         if ((isConsole(sender)) && (cmd.getName().equalsIgnoreCase("CommandLogger")) && (args.length == 1) && (args[0].equals("download"))) {
             String path = "plugins" + File.separator;
             Update.autoUpdate("http://ibhh.de/CommandLogger.jar", path, "CommandLogger.jar");
-        } else if (cmd.getName().equalsIgnoreCase("CommandLogger")) {
+        } else if (cmd.getName().equalsIgnoreCase("CommandLogger") || cmd.getName().equalsIgnoreCase("CL")) {
             if (sender instanceof Player) {
                 Player player = (Player) sender;
-                if (args[0].equalsIgnoreCase("deleteplayer")) {
-                    if (permissionsChecker.checkpermissions(player, "CommandLogger.deleteplayer")) {
-                        if (SQL.deletePlayer(args[1])) {
-                            if (SQL.deletePlayersDB(args[1])) {
-                                PlayerLogger(player, "Sucessfully deleted Player: " + args[1] + "from the table!", "");
+                if (args.length == 1) {
+                    if (args[0].equalsIgnoreCase("deleteplayer")) {
+                        if (permissionsChecker.checkpermissions(player, "CommandLogger.deleteplayer")) {
+                            if (SQL.deletePlayer(args[1])) {
+                                if (SQL.deletePlayersDB(args[1])) {
+                                    PlayerLogger(player, "Sucessfully deleted Player: " + args[1] + "from the table!", "");
+                                }
+                            } else {
+                                PlayerLogger(player, "Error on deleting Player: " + args[1] + "from the table!", "Error");
                             }
-                        } else {
-                            PlayerLogger(player, "Error on deleting Player: " + args[1] + "from the table!", "Error");
                         }
                     }
-                }
-                if (args[0].equalsIgnoreCase("update")) {
-                    if (permissionsChecker.checkpermissions(player, "CommandLogger.update")) {
-                        String path = "plugins" + File.separator;
-                        Update.autoUpdate("http://ibhh.de/CommandLogger.jar", path, "CommandLogger.jar");
-                    }
-                } else if (args[0].equalsIgnoreCase("spy")) {
-                    if (permissionsChecker.checkpermissions(player, "CommandLogger.spy")) {
-                        final String[] args1 = args;
-                        final Player player1 = player;
-                        this.getServer().getScheduler().scheduleAsyncDelayedTask(this, new Runnable() {
-
-                            @Override
-                            public void run() {
-                                try {
-                                    if (SQL.isindb(player1.getName())) {
-                                        int temp = SQL.getToggle(player1.getName());
-                                        if (temp != -1) {
-                                            if (temp == 1) {
-                                                SQL.UpdateXP(player1.getName(), 0);
-                                                temp = 0;
-                                            } else if (temp == 0) {
-                                                SQL.UpdateXP(player1.getName(), 1);
-                                                SQL.PrepareDBPlayersDB(player1.getName());
-                                                temp = 1;
-                                            } else {
-                                                temp = -2;
-                                            }
-                                        }
-                                        PlayerLogger(player1, "Sucessfully toggled spy to " + temp + " !", "");
-                                    } else {
-                                        SQL.InsertAuction(player1.getName(), 1);
-                                        PlayerLogger(player1, "Sucessfully toggled spy to true!", "");
-                                    }
-                                } catch (SQLException ex) {
-                                    java.util.logging.Logger.getLogger(CommandLogger.class.getName()).log(Level.SEVERE, null, ex);
-                                }
-                            }
-                        }, 3);
-                        return true;
-
-                    }
-                } else if (args[0].equalsIgnoreCase("show")) {
-                    if (permissionsChecker.checkpermissions(player, "CommandLogger.show")) {
-                        if (args.length == 2) {
+                    if (args[0].equalsIgnoreCase("update")) {
+                        if (permissionsChecker.checkpermissions(player, "CommandLogger.update")) {
+                            String path = "plugins" + File.separator;
+                            Update.autoUpdate("http://ibhh.de/CommandLogger.jar", path, "CommandLogger.jar");
+                        }
+                    } else if (args[0].equalsIgnoreCase("spy")) {
+                        if (permissionsChecker.checkpermissions(player, "CommandLogger.spy")) {
                             final String[] args1 = args;
                             final Player player1 = player;
                             this.getServer().getScheduler().scheduleAsyncDelayedTask(this, new Runnable() {
@@ -236,90 +211,133 @@ public class CommandLogger extends JavaPlugin {
                                 @Override
                                 public void run() {
                                     try {
-                                        String[] temp = SQL.getViewof(args1[1]);
-                                        PlayerLogger(player1, "Player " + args1[1] +" watches:", "");
-                                        for(String tempstr : temp){
-                                            PlayerLogger(player1, tempstr, "");
+                                        if (SQL.isindb(player1.getName())) {
+                                            int temp = SQL.getToggle(player1.getName());
+                                            if (temp != -1) {
+                                                if (temp == 1) {
+                                                    SQL.UpdateXP(player1.getName(), 0);
+                                                    temp = 0;
+                                                } else if (temp == 0) {
+                                                    SQL.UpdateXP(player1.getName(), 1);
+                                                    SQL.PrepareDBPlayersDB(player1.getName());
+                                                    temp = 1;
+                                                } else {
+                                                    temp = -2;
+                                                }
+                                            }
+                                            PlayerLogger(player1, "Sucessfully toggled spy to " + temp + " !", "");
+                                        } else {
+                                            SQL.InsertAuction(player1.getName(), 1);
+                                            PlayerLogger(player1, "Sucessfully toggled spy to true!", "");
                                         }
                                     } catch (SQLException ex) {
                                         java.util.logging.Logger.getLogger(CommandLogger.class.getName()).log(Level.SEVERE, null, ex);
                                     }
                                 }
                             }, 3);
+                            return true;
+
                         }
-                        return true;
+                    } else if (args[0].equalsIgnoreCase("deletemyconfig")) {
+                        if (permissionsChecker.checkpermissions(player, "CommandLogger.deletemyconfig")) {
+                            final Player player1 = player;
+                            this.getServer().getScheduler().scheduleAsyncDelayedTask(this, new Runnable() {
 
-                    }
-                } else if (args[0].equalsIgnoreCase("edit")) {
-                    if (permissionsChecker.checkpermissions(player, "CommandLogger.spy")) {
-                        final String[] args1 = args;
-                        final Player player1 = player;
-                        this.getServer().getScheduler().scheduleAsyncDelayedTask(this, new Runnable() {
-
-                            @Override
-                            public void run() {
-                                try {
-                                    if (Tools.isInteger(args1[2])) {
-                                        SQL.PrepareDBPlayersDB(player1.getName());
-                                        if (SQL.isinplayersdb(player1.getName(), args1[1])) {
-                                            SQL.UpdatePlayersDB(player1.getName(), args1[1], Integer.parseInt(args1[2]));
-                                            PlayerLogger(player1, "Set the toggle from " + args1[1] + " to " + args1[2], "");
-                                        } else {
-                                            SQL.InsertintoPlayersDB(player1.getName(), args1[1], Integer.parseInt(args1[2]));
-                                            PlayerLogger(player1, "Set the toggle from " + args1[1] + " to " + args1[2], "");
+                                @Override
+                                public void run() {
+                                    try {
+                                        if (SQL.isindb(player1.getName())) {
+                                            if (SQL.deletePlayer(player1.getName())) {
+                                                PlayerLogger(player1, "Sucessfully deleted your toggle!", "");
+                                            } else {
+                                                PlayerLogger(player1, "Error on deleting toggle!", "Error");
+                                            }
                                         }
-                                    } else {
-                                        PlayerLogger(player1, "Enter 0 for deny or 1 for allow commandmessages from " + args1[1], "");
-                                    }
-
-                                } catch (SQLException ex) {
-                                    java.util.logging.Logger.getLogger(CommandLogger.class.getName()).log(Level.SEVERE, null, ex);
-                                }
-                            }
-                        }, 3);
-                        return true;
-                    }
-                } else if (args[0].equalsIgnoreCase("deletemyconfig")) {
-                    if (permissionsChecker.checkpermissions(player, "CommandLogger.deletemyconfig")) {
-                        final Player player1 = player;
-                        this.getServer().getScheduler().scheduleAsyncDelayedTask(this, new Runnable() {
-
-                            @Override
-                            public void run() {
-                                try {
-                                    if (SQL.isindb(player1.getName())) {
-                                        if (SQL.deletePlayer(player1.getName())) {
-                                            PlayerLogger(player1, "Sucessfully deleted your toggle!", "");
+                                        if (SQL.deletePlayersDB(player1.getName())) {
+                                            PlayerLogger(player1, "Sucessfully deleted your db!", "");
                                         } else {
-                                            PlayerLogger(player1, "Error on deleting toggle!", "Error");
+                                            PlayerLogger(player1, "Error on deleting your db!", "Error");
+                                        }
+                                    } catch (SQLException ex) {
+                                        java.util.logging.Logger.getLogger(CommandLogger.class.getName()).log(Level.SEVERE, null, ex);
+                                    }
+                                }
+                            }, 3);
+
+                        }
+                    }
+                } else if (args.length == 2) {
+                    if (args[0].equalsIgnoreCase("show")) {
+                        if (permissionsChecker.checkpermissions(player, "CommandLogger.show")) {
+                            if (args.length == 2) {
+                                final String[] args1 = args;
+                                final Player player1 = player;
+                                this.getServer().getScheduler().scheduleAsyncDelayedTask(this, new Runnable() {
+
+                                    @Override
+                                    public void run() {
+                                        try {
+                                            String[] temp = SQL.getViewof(args1[1]);
+                                            PlayerLogger(player1, "Player " + args1[1] + " watches:", "");
+                                            for (String tempstr : temp) {
+                                                PlayerLogger(player1, tempstr, "");
+                                            }
+                                        } catch (SQLException ex) {
+                                            java.util.logging.Logger.getLogger(CommandLogger.class.getName()).log(Level.SEVERE, null, ex);
                                         }
                                     }
-                                    if (SQL.deletePlayersDB(player1.getName())) {
-                                        PlayerLogger(player1, "Sucessfully deleted your db!", "");
-                                    } else {
-                                        PlayerLogger(player1, "Error on deleting your db!", "Error");
-                                    }
-                                } catch (SQLException ex) {
-                                    java.util.logging.Logger.getLogger(CommandLogger.class.getName()).log(Level.SEVERE, null, ex);
-                                }
+                                }, 3);
                             }
-                        }, 3);
+                            return true;
 
+                        }
+                    }
+                } else if (args.length == 3) {
+                    if (args[0].equalsIgnoreCase("edit")) {
+                        if (permissionsChecker.checkpermissions(player, "CommandLogger.spy")) {
+                            final String[] args1 = args;
+                            final Player player1 = player;
+                            this.getServer().getScheduler().scheduleAsyncDelayedTask(this, new Runnable() {
+
+                                @Override
+                                public void run() {
+                                    try {
+                                        if (Tools.isInteger(args1[2])) {
+                                            SQL.PrepareDBPlayersDB(player1.getName());
+                                            if (SQL.isinplayersdb(player1.getName(), args1[1])) {
+                                                SQL.UpdatePlayersDB(player1.getName(), args1[1], Integer.parseInt(args1[2]));
+                                                PlayerLogger(player1, "Set the toggle from " + args1[1] + " to " + args1[2], "");
+                                            } else {
+                                                SQL.InsertintoPlayersDB(player1.getName(), args1[1], Integer.parseInt(args1[2]));
+                                                PlayerLogger(player1, "Set the toggle from " + args1[1] + " to " + args1[2], "");
+                                            }
+                                        } else {
+                                            PlayerLogger(player1, "Enter 0 for deny or 1 for allow commandmessages from " + args1[1], "");
+                                        }
+
+                                    } catch (SQLException ex) {
+                                        java.util.logging.Logger.getLogger(CommandLogger.class.getName()).log(Level.SEVERE, null, ex);
+                                    }
+                                }
+                            }, 3);
+                            return true;
+                        }
                     }
                 }
             }
         }
         return false;
     }
-    
+
     /**
      * Writes log into file
+     *
      * @param Playername
      * @param Command
      * @param world
      * @param X
      * @param Y
-     * @param Z 
+     * @param Z
      */
     public void writeLog(String Playername, String Command, String world, int X, int Y, int Z) {
         Date now = new Date();
@@ -364,6 +382,7 @@ public class CommandLogger extends JavaPlugin {
             }
         }
     }
+
     public void dumpintofile(String input) {
         Date now = new Date();
         String Stream = now.toString();

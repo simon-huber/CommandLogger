@@ -1,5 +1,5 @@
 name:  CommandLogger
-version:  1.0
+version:  1.2
 description:  
 author:  ibhh
 website: http://www.ibhh.de/CommandLogger
@@ -7,6 +7,12 @@ website: http://www.ibhh.de/CommandLogger
 main: me.ibhh.CommandLogger.CommandLogger
 
 commands:
+  CommandLogger:
+    description: Help
+    usage: /CommandLogger
+  CL:
+    description: Help
+    usage: /CommandLogger
   CommandLogger spy:
     description: Toggles spy of you
     usage: /CommandLogger spy
@@ -19,6 +25,18 @@ commands:
   CommandLogger update:
     description: Updates the plugin
     usage: /CommandLogger update
+  CL spy:
+    description: Toggles spy of you
+    usage: /CL spy
+  CL edit:
+    description: You can edit the commandmessage showing of this player
+    usage: /CL edit <player> <1|0>
+  CL show:
+    description: Shows you which players an other player spys.
+    usage: /CL show <player>
+  CL update:
+    description: Updates the plugin
+    usage: /CL update
 permissions:
   CommandLogger.*:
     description: Help

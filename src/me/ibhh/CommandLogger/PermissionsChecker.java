@@ -92,7 +92,7 @@ public class PermissionsChecker {
             try {
                 final AnjoPermissionsHandler handler = groupManager.getWorldsHolder().getWorldPermissions(player);
                 {
-                    if (handler == null) {
+                    if (handler != null) {
                         if (handler.has(player, action)) {
                             return true;
                         } else {
@@ -171,7 +171,7 @@ public class PermissionsChecker {
             try {
                 final AnjoPermissionsHandler handler = groupManager.getWorldsHolder().getWorldPermissions(player);
                 {
-                    if (handler == null) {
+                    if (handler != null) {
                         if (handler.has(player, action)) {
                             return true;
                         } else {
