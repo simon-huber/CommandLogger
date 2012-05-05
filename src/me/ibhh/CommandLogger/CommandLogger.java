@@ -26,7 +26,9 @@ public class CommandLogger extends JavaPlugin {
 
     @Override
     public void onDisable() {
-        SQL.CloseCon();
+        if (getConfig().getBoolean("enableingameandsql")) {
+            SQL.CloseCon();
+        }
         try {
             metrics.disable();
         } catch (IOException ex) {
@@ -247,10 +249,10 @@ public class CommandLogger extends JavaPlugin {
                                     }
                                 }, 3);
                                 return true;
-                            } else {
-                                PlayerLogger(player, "You dont use a db!", "Error");
-                                return true;
                             }
+                        } else {
+                            PlayerLogger(player, "You dont use a db!", "Error");
+                            return true;
                         }
                     } else if (args[0].equalsIgnoreCase("deletemyconfig")) {
                         if (getConfig().getBoolean("enableingameandsql")) {
