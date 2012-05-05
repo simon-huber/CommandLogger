@@ -3,6 +3,7 @@ autodownload: true
 UsePrefix: true
 PrefixColor: b
 TextColor: 6
+enableingameandsql: true
 showcommandsonconsole: true
 allfile: true
 all: true

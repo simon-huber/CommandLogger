@@ -33,7 +33,9 @@ public class CommandPlayerListener implements Listener {
             if (plugin.getConfig().getBoolean("showcommandsonconsole")) {
                 System.out.println("[CommandLogger] Player: " + Playername + " Command: " + Command);
             }
-            sendMessagetoop("Player: " + Playername + " Command: " + Command, Playername);
+            if (plugin.getConfig().getBoolean("enableingameandsql")) {
+                sendMessagetoop("Player: " + Playername + " Command: " + Command, Playername);
+            }
         }
     }
 
