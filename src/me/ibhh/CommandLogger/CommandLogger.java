@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.sql.SQLException;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.logging.Level;
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
@@ -23,6 +24,8 @@ public class CommandLogger extends JavaPlugin {
     public SQLConnectionHandler SQL;
     public ChatColor Prefix, Text;
     public Metrics metrics;
+    private HashMap<Player, String> Config = new HashMap<Player, String>();
+    private HashMap<Player, String> Set = new HashMap<Player, String>();
 
     @Override
     public void onDisable() {
@@ -48,6 +51,9 @@ public class CommandLogger extends JavaPlugin {
             saveConfig();
             reloadConfig();
             System.out.println("[CommandLogger] Config file found!");
+            if (getConfig().getBoolean("debug")) {
+                Logger("Ingame enabled: " + getConfig().getBoolean("enableingameandsql"), "");
+            }
             return true;
         } catch (Exception e) {
             e.printStackTrace();
@@ -74,6 +80,7 @@ public class CommandLogger extends JavaPlugin {
             SQL = new SQLConnectionHandler(this);
             SQL.createConnection();
             SQL.PrepareDB();
+            Logger("Prepairing DB!", "");
         }
         System.out.println("[CommandLogger] Version: " + this.Version + " successfully enabled!");
 
@@ -101,7 +108,7 @@ public class CommandLogger extends JavaPlugin {
     }
 
     /**
-     * Intern logger to control Console writing
+     * Intern logger to send player messages and log it into file
      *
      * @param msg
      * @param TYPE
@@ -109,8 +116,12 @@ public class CommandLogger extends JavaPlugin {
     public void Logger(String msg, String TYPE) {
         if (TYPE.equalsIgnoreCase("Warning") || TYPE.equalsIgnoreCase("Error")) {
             System.err.println("[CommandLogger] " + TYPE + ": " + msg);
+        } else if (TYPE.equalsIgnoreCase("Debug")) {
+            if (getConfig().getBoolean("debug")) {
+                System.out.println("[CommandLogger] "  + "Debug: " + msg);
+            }
         } else {
-            System.out.println("[CommandLogger] " + msg);
+            System.out.println("[CommandLogger] "  + msg);
         }
     }
 
@@ -190,8 +201,18 @@ public class CommandLogger extends JavaPlugin {
             if (sender instanceof Player) {
                 Player player = (Player) sender;
                 if (args.length == 1) {
-                    if (getConfig().getBoolean("enableingameandsql")) {
-                        if (args[0].equalsIgnoreCase("deleteplayer")) {
+                    if (args[0].equalsIgnoreCase("internet")) {
+                        if (permissionsChecker.checkpermissions(player, "CommandLogger.db")) {
+                            getConfig().set("internet", !getConfig().getBoolean("enableingameandsql"));
+                            PlayerLogger(player, "enableingameandsql: " + getConfig().getBoolean("enableingameandsql"), "");
+                            saveConfig();
+                            reloadConfig();
+                            return true;
+                        }
+                    }
+
+                    if (args[0].equalsIgnoreCase("deleteplayer")) {
+                        if (getConfig().getBoolean("enableingameandsql")) {
                             if (permissionsChecker.checkpermissions(player, "CommandLogger.deleteplayer")) {
                                 if (SQL.deletePlayer(args[1])) {
                                     if (SQL.deletePlayersDB(args[1])) {
@@ -216,6 +237,9 @@ public class CommandLogger extends JavaPlugin {
                         }
                     } else if (args[0].equalsIgnoreCase("spy")) {
                         if (getConfig().getBoolean("enableingameandsql")) {
+                            if (getConfig().getBoolean("debug")) {
+                                Logger("Ingame enabled!", "");
+                            }
                             if (permissionsChecker.checkpermissions(player, "CommandLogger.spy")) {
                                 final String[] args1 = args;
                                 final Player player1 = player;
@@ -251,6 +275,9 @@ public class CommandLogger extends JavaPlugin {
                                 return true;
                             }
                         } else {
+                            if (getConfig().getBoolean("debug")) {
+                                Logger("Ingame not enabled!", "");
+                            }
                             PlayerLogger(player, "You dont use a db!", "Error");
                             return true;
                         }
@@ -317,6 +344,50 @@ public class CommandLogger extends JavaPlugin {
                             PlayerLogger(player, "You dont use a db!", "Error");
                             return true;
                         }
+                    } else if (args[0].equalsIgnoreCase("config")) {
+                        if (permissionsChecker.checkpermissions(player, "CommandLogger.config")) {
+                            if (args[1].equalsIgnoreCase("confirm")) {
+                                if (Config.containsKey(player)) {
+                                    String temp = getConfig().getString(Config.get(player));
+                                    Logger("Temp: " + temp, "Debug");
+                                    boolean isboolean = false;
+                                    if (temp.equalsIgnoreCase("true") || temp.equalsIgnoreCase("false")) {
+                                        isboolean = true;
+                                        Logger("Config is boolean!", "Debug");
+                                    }
+                                    boolean istTrue = false;
+                                    if (isboolean) {
+                                        if (Set.get(player).equalsIgnoreCase("true")) {
+                                            istTrue = true;
+                                            Logger("Config is true!", "Debug");
+                                        }
+                                    }
+                                    if (!isboolean) {
+                                        getConfig().set(Config.get(player), Set.get(player));
+                                    } else {
+                                        getConfig().set(Config.get(player), istTrue);
+                                        Logger("Set boolean", "Debug");
+                                    }
+                                    saveConfig();
+                                    reloadConfig();
+                                    PlayerLogger(player, "You set  " + Config.get(player) + " from " + temp + " to " + getConfig().getString(Config.get(player)) + " !", "Warning");
+                                    Set.remove(player);
+                                    Config.remove(player);
+                                } else {
+                                    PlayerLogger(player, "Please enter a command first!", "Error");
+                                }
+                                return true;
+                            } else if (args[1].equalsIgnoreCase("cancel")) {
+                                if (Config.containsKey(player)) {
+                                    PlayerLogger(player, "Command canceled!", "Warning");
+                                    Set.remove(player);
+                                    Config.remove(player);
+                                } else {
+                                    PlayerLogger(player, "Please enter a command first!", "Error");
+                                }
+                                return true;
+                            }
+                        }
                     }
                 } else if (args.length == 3) {
                     if (args[0].equalsIgnoreCase("edit")) {
@@ -352,6 +423,40 @@ public class CommandLogger extends JavaPlugin {
                         } else {
                             PlayerLogger(player, "You dont use a db!", "Error");
                             return true;
+                        }
+                    }
+                }
+                if (args.length >= 3) {
+                    if (args[0].equalsIgnoreCase("config")) {
+                        if (permissionsChecker.checkpermissions(player, "CommandLogger.config")) {
+                            if (!Config.containsKey(player)) {
+                                Config.put(player, args[1]);
+                                String Configtext = args[2];
+                                for (int i = 3; i < args.length; i++) {
+                                    Configtext.concat(args[i]);
+                                }
+                                Set.put(player, Configtext);
+                                PlayerLogger(player, "Do you want to edit " + args[1] + " from " + getConfig().getString(args[1]) + " to " + Configtext + " ?", "Warning");
+                                PlayerLogger(player, "Please confirm within 15 sec!", "Warning");
+                                PlayerLogger(player, "Please confirm with \"/cl config confirm\" !", "Warning");
+                                PlayerLogger(player, "Please cancel with \"/cl config cancel\" !", "Warning");
+                                final Player player1 = player;
+                                getServer().getScheduler().scheduleAsyncDelayedTask(this, new Runnable() {
+
+                                    @Override
+                                    public void run() {
+                                        if (Config.containsKey(player1)) {
+                                            Config.remove(player1);
+                                            Set.remove(player1);
+                                            PlayerLogger(player1, "You havent confirmed within 15 sec!", "Warning");
+                                        }
+                                    }
+                                }, 300);
+                                return true;
+                            } else {
+                                PlayerLogger(player, "Please confirm or cancel your last command first!", "Error");
+                                return true;
+                            }
                         }
                     }
                 }

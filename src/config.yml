@@ -1,4 +1,5 @@
 language: en
+debug: false
 autodownload: true
 UsePrefix: true
 PrefixColor: b
