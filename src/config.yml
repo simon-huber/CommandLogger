@@ -2,6 +2,8 @@ language: en
 debug: false
 regenfix: false
 autodownload: true
+installondownload: false
+internet: true
 UsePrefix: true
 PrefixColor: b
 TextColor: 6

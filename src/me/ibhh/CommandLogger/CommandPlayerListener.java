@@ -2,19 +2,10 @@ package me.ibhh.CommandLogger;
 
 import com.griefcraft.lwc.LWC;
 import com.griefcraft.lwc.LWCPlugin;
-import com.griefcraft.model.Protection;
-import com.sk89q.worldedit.IncompleteRegionException;
-import com.sk89q.worldedit.bukkit.WorldEditAPI;
 import com.sk89q.worldedit.bukkit.WorldEditPlugin;
-import com.sk89q.worldedit.bukkit.selections.RegionSelection;
 import com.sk89q.worldedit.bukkit.selections.Selection;
-import com.sk89q.worldedit.regions.Region;
-import com.sk89q.worldedit.regions.RegionSelector;
 import java.sql.SQLException;
-import java.util.concurrent.DelayQueue;
 import java.util.logging.Level;
-import java.util.logging.Logger;
-import net.minecraft.server.Material;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.block.Block;
@@ -26,8 +17,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
-import org.bukkit.inventory.Inventory;
-import org.bukkit.material.MaterialData;
+import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.plugin.Plugin;
 
 public class CommandPlayerListener implements Listener {
@@ -42,6 +32,19 @@ public class CommandPlayerListener implements Listener {
 
     public static boolean isChest(Block block) {
         return block.getState() instanceof Chest;
+    }
+
+    @EventHandler(priority = EventPriority.HIGH)
+    public void join(PlayerJoinEvent event) {
+        if (plugin.permissionsChecker.checkpermissionssilent(event.getPlayer(), "CommandLogger.admin")) {
+            if (plugin.updateaviable) {
+                plugin.PlayerLogger(event.getPlayer(), "installed CommandLogger version: " + plugin.Version + ", latest version: " + plugin.newversion, "Warning");
+                plugin.PlayerLogger(event.getPlayer(), "New CommandLogger update aviable: type \"/CommandLogger update\" to install!", "Warning");
+                if (!plugin.getConfig().getBoolean("installondownload")) {
+                    plugin.PlayerLogger(event.getPlayer(), "Please edit the config.yml if you wish that the plugin updates itself atomatically!", "Warning");
+                }
+            }
+        }
     }
 
     @EventHandler(priority = EventPriority.HIGH)
@@ -96,8 +99,8 @@ public class CommandPlayerListener implements Listener {
                                 if (isChest(aktblock)) {
                                     aktblock.breakNaturally();
                                     Entity[] ent = aktblock.getChunk().getEntities();
-                                    for(Entity entity : ent){
-                                        if(entity.getType().equals(EntityType.PLAYER)){
+                                    for (Entity entity : ent) {
+                                        if (entity.getType().equals(EntityType.PLAYER)) {
                                             Player pl = (Player) entity;
                                             pl.kickPlayer("Stopping client crash becaue of //regen");
                                         }
