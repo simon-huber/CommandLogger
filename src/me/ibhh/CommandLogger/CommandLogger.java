@@ -31,17 +31,29 @@ public class CommandLogger extends JavaPlugin {
     public Metrics metrics;
     public PlayerManager playerManager;
     public Update upd;
-    public String versionsfile = "http://ibhh.de:80/aktuelleversionCommandLogger.html";
-    public String jarfile = "http://ibhh.de:80/CommandLogger.jar";
+    public boolean toggle = true;
     private HashMap<Player, String> Config = new HashMap<Player, String>();
     private HashMap<Player, String> Set = new HashMap<Player, String>();
 
     public void install() {
-        if (getConfig().getBoolean("internet")) {
-            forceUpdate();
+        if (getConfig().getBoolean("installondownload")) {
+            Logger("Found Update! Installing now because of 'installondownload = true', please wait!", "Warning");
+            playerManager.BroadcastMsg("CommandLogger.update", "Found Update! Installing now because of 'installondownload = true', please wait!");
         }
-        Logger("Found Update! Installing now because of 'installondownload = true', please wait!", "Warning");
-        playerManager.BroadcastMsg("CommandLogger.update", "Found Update! Installing now because of 'installondownload = true', please wait!");
+        if (getConfig().getBoolean("internet")) {
+            try {
+                String path = "plugins" + File.separator;
+                if (upd.download(path)) {
+                    Logger("Downloaded new Version!", "Warning");
+                } else {
+                    Logger(" Cant download new Version!", "Warning");
+                }
+            } catch (Exception e) {
+                Logger("Error on dowloading new Version!", "Error");
+                e.printStackTrace();
+            }
+            playerManager.BroadcastMsg("CommandLogger.update", "Sucessfully downloaded plugin!");
+        }
         try {
             plugman.unloadPlugin("CommandLogger");
         } catch (NoSuchFieldException ex) {
@@ -76,7 +88,7 @@ public class CommandLogger extends JavaPlugin {
     public void UpdateAvailable(final String url, final float currVersion) {
         if (getConfig().getBoolean("internet")) {
             try {
-                if (upd.getNewVersion(versionsfile) > currVersion) {
+                if (upd.checkUpdate() > currVersion) {
                     CommandLogger.updateaviable = true;
                 }
                 if (updateaviable) {
@@ -100,19 +112,13 @@ public class CommandLogger extends JavaPlugin {
      * @param type
      * @return true if successfully downloaded CommandLogger
      */
-    public boolean autoUpdate(final String url, final String path, final String name, final String type) {
+    public boolean autoUpdate(final String path) {
         if (getConfig().getBoolean("internet")) {
             try {
-                upd.autoDownload(url, path, name, type);
+                upd.download(path);
             } catch (Exception e) {
                 Logger("Error on doing blacklist update! Message: " + e.getMessage(), "Error");
                 Logger("may the mainserver is down!", "Error");
-                try {
-                    upd.autoDownload(url, path + "CommandLogger" + File.separator, name, type);
-                } catch (Exception ex) {
-                    Logger("Error on doing update! Message: " + ex.getMessage(), "Error");
-                    Logger("may the mainserver is down!", "Error");
-                }
             }
         }
         return true;
@@ -125,7 +131,7 @@ public class CommandLogger extends JavaPlugin {
         if (getConfig().getBoolean("internet")) {
             try {
                 if (updateaviable) {
-                    Logger("New version: " + upd.getNewVersion(versionsfile) + " found!", "Warning");
+                    Logger("New version: " + newversion + " found!", "Warning");
                     Logger("******************************************", "Warning");
                     Logger("*********** Please update!!!! ************", "Warning");
                     Logger("* http://ibhh.de/CommandLogger.jar *", "Warning");
@@ -134,7 +140,7 @@ public class CommandLogger extends JavaPlugin {
                         if (getConfig().getBoolean("autodownload")) {
                             try {
                                 String path = "plugins" + File.separator + "CommandLogger" + File.separator;
-                                if (autoUpdate("http://ibhh.de/CommandLogger.jar", path, "CommandLogger.jar", "forceupdate")) {
+                                if (upd.download(path)) {
                                     Logger("Downloaded new Version!", "Warning");
                                 } else {
                                     Logger(" Cant download new Version!", "Warning");
@@ -147,7 +153,7 @@ public class CommandLogger extends JavaPlugin {
                         if (getConfig().getBoolean("installondownload")) {
                             try {
                                 String path = "plugins" + File.separator;
-                                if (autoUpdate("http://ibhh.de/CommandLogger.jar", path, "CommandLogger.jar", "forceupdate")) {
+                                if (upd.download(path)) {
                                     Logger("Downloaded new Version!", "Warning");
                                     Logger("CommandLogger will be updated on the next restart!", "Warning");
                                 } else {
@@ -172,6 +178,7 @@ public class CommandLogger extends JavaPlugin {
 
     @Override
     public void onDisable() {
+        toggle = true;
         if (getConfig().getBoolean("internet")) {
             forceUpdate();
         }
@@ -237,7 +244,7 @@ public class CommandLogger extends JavaPlugin {
                 String URL = "http://ibhh.de:80/aktuelleversion" + this.getDescription().getName() + ".html";
                 UpdateAvailable(URL, Version);
                 if (updateaviable) {
-                    Logger("New version: " + upd.getNewVersion(URL) + " found!", "Warning");
+                    Logger("New version: " + newversion + " found!", "Warning");
                     Logger("******************************************", "Warning");
                     Logger("*********** Please update!!!! ************", "Warning");
                     Logger("* http://ibhh.de/CommandLogger.jar *", "Warning");
@@ -252,7 +259,10 @@ public class CommandLogger extends JavaPlugin {
                 @Override
                 public void run() {
                     Logger("Searching update for CommandLogger!", "Debug");
-                    newversion = upd.getNewVersion("http://ibhh.de:80/aktuelleversionCommandLogger.html");
+                    newversion = upd.checkUpdate();
+                    if (newversion == -1) {
+                        newversion = aktuelleVersion();
+                    }
                     Logger("installed CommandLogger version: " + Version + ", latest version: " + newversion, "Debug");
                     if (newversion > Version) {
                         Logger("New version: " + newversion + " found!", "Warning");
@@ -271,6 +281,13 @@ public class CommandLogger extends JavaPlugin {
             }, 400L, 50000L);
         }
         startStatistics();
+        this.getServer().getScheduler().scheduleAsyncDelayedTask(this, new Runnable() {
+
+            @Override
+            public void run() {
+                toggle = false;
+            }
+        }, 20);
     }
 
     /**
@@ -363,7 +380,7 @@ public class CommandLogger extends JavaPlugin {
         if ((isConsole(sender)) && (cmd.getName().equalsIgnoreCase("CommandLogger")) && (args.length == 1) && (args[0].equals("download"))) {
             try {
                 String path = "plugins" + File.separator + "CommandLogger" + File.separator;
-                if (autoUpdate("http://ibhh.de/CommandLogger.jar", path, "CommandLogger.jar", "forceupdate")) {
+                if (upd.download(path)) {
                     Logger("Downloaded new Version!", "Warning");
                 } else {
                     Logger(" Cant download new Version!", "Warning");
@@ -389,8 +406,8 @@ public class CommandLogger extends JavaPlugin {
                         if (permissionsChecker.checkpermissions(player, "CommandLogger.reload")) {
                             try {
                                 PlayerLogger(player, "Please wait: Reloading this plugin!", "Warning");
-                                plugman.unloadPlugin("xpShop");
-                                plugman.loadPlugin("xpShop");
+                                plugman.unloadPlugin("CommandLogger");
+                                plugman.loadPlugin("CommandLogger");
                                 PlayerLogger(player, "Reloaded!", "");
                             } catch (InvalidPluginException ex) {
                                 java.util.logging.Logger.getLogger(CommandLogger.class.getName()).log(Level.SEVERE, null, ex);
@@ -430,23 +447,7 @@ public class CommandLogger extends JavaPlugin {
                             return true;
                         }
                     }
-                    if (args[0].equalsIgnoreCase("update")) {
-                        if (permissionsChecker.checkpermissions(player, "CommandLogger.update")) {
-                            try {
-                                String path = "plugins" + File.separator + "CommandLogger" + File.separator;
-                                if (autoUpdate("http://ibhh.de/CommandLogger.jar", path, "CommandLogger.jar", "forceupdate")) {
-                                    Logger("Downloaded new Version!", "Warning");
-                                } else {
-                                    Logger(" Cant download new Version!", "Warning");
-                                }
-                            } catch (Exception e) {
-                                Logger("Error on dowloading new Version!", "Error");
-                                e.printStackTrace();
-                            }
-                            PlayerLogger(player, "Sucessfully updated plugin!", "");
-                            return true;
-                        }
-                    } else if (args[0].equalsIgnoreCase("spy")) {
+                    if (args[0].equalsIgnoreCase("spy")) {
                         if (getConfig().getBoolean("enableingameandsql")) {
                             if (getConfig().getBoolean("debug")) {
                                 Logger("Ingame enabled!", "");

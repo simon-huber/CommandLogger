@@ -20,12 +20,19 @@ public class PlayerManager {
 
     public int BroadcastMsg(String Permission, String msg) {
         int BroadcastedPlayers = 0;
+        if (plugin.toggle) {
+            return 0;
+        }
         try {
             for (Player player : plugin.getServer().getOnlinePlayers()) {
                 if (plugin.permissionsChecker != null) {
                     if (plugin.permissionsChecker.checkpermissionssilent(player, Permission)) {
-                            player.sendMessage(plugin.Prefix + "[CommandLogger] " + msg);
-                            BroadcastedPlayers++;
+                        if (plugin.getConfig().getBoolean("UsePrefix")) {
+                            player.sendMessage(plugin.Prefix + "[CommandLogger] " + plugin.Text + msg);
+                        } else {
+                            player.sendMessage(plugin.Text + msg);
+                        }
+                        BroadcastedPlayers++;
                     }
                 }
             }

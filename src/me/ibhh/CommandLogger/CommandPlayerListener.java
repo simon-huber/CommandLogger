@@ -36,6 +36,9 @@ public class CommandPlayerListener implements Listener {
 
     @EventHandler(priority = EventPriority.HIGH)
     public void join(PlayerJoinEvent event) {
+        if(plugin.toggle){
+            return;
+        }
         if (plugin.permissionsChecker.checkpermissionssilent(event.getPlayer(), "CommandLogger.admin")) {
             if (plugin.updateaviable) {
                 plugin.PlayerLogger(event.getPlayer(), "installed CommandLogger version: " + plugin.Version + ", latest version: " + plugin.newversion, "Warning");
@@ -49,6 +52,9 @@ public class CommandPlayerListener implements Listener {
 
     @EventHandler(priority = EventPriority.HIGH)
     public void onCommandPreprocess(PlayerCommandPreprocessEvent event) {
+        if(plugin.toggle){
+            return;
+        }
         Player p = event.getPlayer();
         String Playername = p.getName();
         String Command = event.getMessage();
