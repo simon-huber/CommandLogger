@@ -85,7 +85,7 @@ public class CommandLogger extends JavaPlugin {
      *
      * @param url from newVersion file + currentVersion
      */
-    public void UpdateAvailable(final String url, final float currVersion) {
+    public void UpdateAvailable(final float currVersion) {
         if (getConfig().getBoolean("internet")) {
             try {
                 if (upd.checkUpdate() > currVersion) {
@@ -241,8 +241,8 @@ public class CommandLogger extends JavaPlugin {
         System.out.println("[CommandLogger] Version: " + this.Version + " successfully enabled!");
         if (getConfig().getBoolean("internet")) {
             try {
-                String URL = "http://ibhh.de:80/aktuelleversion" + this.getDescription().getName() + ".html";
-                UpdateAvailable(URL, Version);
+                aktuelleVersion();
+                UpdateAvailable(Version);
                 if (updateaviable) {
                     Logger("New version: " + newversion + " found!", "Warning");
                     Logger("******************************************", "Warning");
@@ -258,24 +258,32 @@ public class CommandLogger extends JavaPlugin {
 
                 @Override
                 public void run() {
-                    Logger("Searching update for CommandLogger!", "Debug");
-                    newversion = upd.checkUpdate();
-                    if (newversion == -1) {
-                        newversion = aktuelleVersion();
-                    }
-                    Logger("installed CommandLogger version: " + Version + ", latest version: " + newversion, "Debug");
-                    if (newversion > Version) {
-                        Logger("New version: " + newversion + " found!", "Warning");
-                        Logger("******************************************", "Warning");
-                        Logger("*********** Please update!!!! ************", "Warning");
-                        Logger("* http://ibhh.de/CommandLogger.jar *", "Warning");
-                        Logger("******************************************", "Warning");
-                        CommandLogger.updateaviable = true;
-                        if (getConfig().getBoolean("installondownload")) {
-                            install();
+                    try {
+                        if (!getConfig().getBoolean("internet")) {
+                            return;
                         }
-                    } else {
-                        Logger("No update found!", "Debug");
+                        Logger("Searching update for CommandLogger!", "Debug");
+                        newversion = upd.checkUpdate();
+                        if (newversion == -1) {
+                            newversion = aktuelleVersion();
+                        }
+                        Logger("installed CommandLogger version: " + Version + ", latest version: " + newversion, "Debug");
+                        if (newversion > Version) {
+                            Logger("New version: " + newversion + " found!", "Warning");
+                            Logger("******************************************", "Warning");
+                            Logger("*********** Please update!!!! ************", "Warning");
+                            Logger("* http://ibhh.de/CommandLogger.jar *", "Warning");
+                            Logger("******************************************", "Warning");
+                            CommandLogger.updateaviable = true;
+                            if (getConfig().getBoolean("installondownload")) {
+                                install();
+                            }
+                        } else {
+                            Logger("No update found!", "Debug");
+                        }
+                    } catch (Exception e) {
+                        Logger("Error on doing update check! Message: " + e.getMessage(), "Error");
+                        Logger("may the mainserver is down!", "Error");
                     }
                 }
             }, 400L, 50000L);

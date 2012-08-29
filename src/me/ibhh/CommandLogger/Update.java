@@ -44,7 +44,7 @@ class Update {
     public String getLink() {
         String link = "";
         try {
-            URL rss = new URL("http://dev.bukkit.org/server-mods/" + plugin.getDescription().getName() + "/files.rss");
+            URL rss = new URL("http://dev.bukkit.org/server-mods/" + "playercommandlogger" + "/files.rss");
             ReadableByteChannel rbc = Channels.newChannel(rss.openStream());
             plugin.getDataFolder().mkdir();
             File outputFile = new File(plugin.getDataFolder(), plugin.getDescription().getName() + ".tmp");

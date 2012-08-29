@@ -9,6 +9,13 @@ PrefixColor: b
 TextColor: 6
 enableingameandsql: true
 showcommandsonconsole: true
+permissions:
+  error:
+    de: Wir haben ein Problem! Dies darfst Du nicht machen!
+    en: we have a problem! You musnt do this!
+  notfound:
+    de: PermissionsEx plugin nicht gefunden!
+    en: PermissionsEx not found!
 allfile: true
 all: true
 playerxy: true
