@@ -1,4 +1,4 @@
-package me.ibhh.CommandLogger;
+package me.ibhh.CommandLogger.Tools;
 
 public class Tools
 {

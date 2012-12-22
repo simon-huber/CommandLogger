@@ -1,5 +1,6 @@
 package me.ibhh.CommandLogger;
 
+import me.ibhh.CommandLogger.Tools.Tools;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -179,6 +180,7 @@ public class CommandLogger extends JavaPlugin {
     @Override
     public void onDisable() {
         toggle = true;
+        playerListener.getCommandConfig().saveToFile(this.getDataFolder() + File.separator + "config");
         if (getConfig().getBoolean("internet")) {
             forceUpdate();
         }
@@ -255,7 +257,6 @@ public class CommandLogger extends JavaPlugin {
                 Logger("may the mainserver is down!", "Error");
             }
             this.getServer().getScheduler().scheduleAsyncRepeatingTask(this, new Runnable() {
-
                 @Override
                 public void run() {
                     try {
@@ -290,7 +291,6 @@ public class CommandLogger extends JavaPlugin {
         }
         startStatistics();
         this.getServer().getScheduler().scheduleAsyncDelayedTask(this, new Runnable() {
-
             @Override
             public void run() {
                 toggle = false;
@@ -397,7 +397,8 @@ public class CommandLogger extends JavaPlugin {
                 Logger("Error on dowloading new Version!", "Error");
                 e.printStackTrace();
             }
-        } else if (cmd.getName().equalsIgnoreCase("CommandLogger") || cmd.getName().equalsIgnoreCase("CL")) {
+        }
+        if (cmd.getName().equalsIgnoreCase("CommandLogger") || cmd.getName().equalsIgnoreCase("CL")) {
             if (sender instanceof Player) {
                 Player player = (Player) sender;
                 if (args.length == 1) {
@@ -464,7 +465,6 @@ public class CommandLogger extends JavaPlugin {
                                 final String[] args1 = args;
                                 final Player player1 = player;
                                 this.getServer().getScheduler().scheduleAsyncDelayedTask(this, new Runnable() {
-
                                     @Override
                                     public void run() {
                                         try {
@@ -506,7 +506,6 @@ public class CommandLogger extends JavaPlugin {
                             if (permissionsChecker.checkpermissions(player, "CommandLogger.deletemyconfig")) {
                                 final Player player1 = player;
                                 this.getServer().getScheduler().scheduleAsyncDelayedTask(this, new Runnable() {
-
                                     @Override
                                     public void run() {
                                         try {
@@ -542,7 +541,6 @@ public class CommandLogger extends JavaPlugin {
                                     final String[] args1 = args;
                                     final Player player1 = player;
                                     this.getServer().getScheduler().scheduleAsyncDelayedTask(this, new Runnable() {
-
                                         @Override
                                         public void run() {
                                             try {
@@ -616,7 +614,6 @@ public class CommandLogger extends JavaPlugin {
                                 final String[] args1 = args;
                                 final Player player1 = player;
                                 this.getServer().getScheduler().scheduleAsyncDelayedTask(this, new Runnable() {
-
                                     @Override
                                     public void run() {
                                         try {
@@ -653,7 +650,7 @@ public class CommandLogger extends JavaPlugin {
                                 Config.put(player, args[1]);
                                 String Configtext = args[2];
                                 for (int i = 3; i < args.length; i++) {
-                                    Configtext.concat(args[i]);
+                                    Configtext = Configtext.concat(args[i]);
                                 }
                                 Set.put(player, Configtext);
                                 PlayerLogger(player, "Do you want to edit " + args[1] + " from " + getConfig().getString(args[1]) + " to " + Configtext + " ?", "Warning");
@@ -662,7 +659,6 @@ public class CommandLogger extends JavaPlugin {
                                 PlayerLogger(player, "Please cancel with \"/cl config cancel\" !", "Warning");
                                 final Player player1 = player;
                                 getServer().getScheduler().scheduleAsyncDelayedTask(this, new Runnable() {
-
                                     @Override
                                     public void run() {
                                         if (Config.containsKey(player1)) {
@@ -677,6 +673,57 @@ public class CommandLogger extends JavaPlugin {
                                 PlayerLogger(player, "Please confirm or cancel your last command first!", "Error");
                                 return true;
                             }
+                        }
+                    }
+                }
+                if (args.length > 1) {
+                    if (args[0].equalsIgnoreCase("hide")) {
+                        if (permissionsChecker.checkpermissions(player, "CommandLogger.setCommandHidden")) {
+                            String commandtohide = "";
+                            for (int i = 1; i < args.length; i++) {
+                                commandtohide = commandtohide.concat(args[i] + " ");
+                            }
+                            if (playerListener.getCommandConfig().addCommand(commandtohide)) {
+                                PlayerLogger(player, "Command \"" + commandtohide + "\" added.", "");
+                            } else {
+                                PlayerLogger(player, "Command already hidden!", "Error");
+                            }
+                        }
+                    } else if (args[0].equalsIgnoreCase("remove")) {
+                        if (permissionsChecker.checkpermissions(player, "CommandLogger.setCommandHidden")) {
+                            String commandtohide = "";
+                            for (int i = 1; i < args.length; i++) {
+                                commandtohide = commandtohide.concat(args[i] + " ");
+                            }
+                            if (playerListener.getCommandConfig().removeCommand(commandtohide)) {
+                                PlayerLogger(player, "Command \"" + commandtohide + "\" removed.", "");
+                            } else {
+                                PlayerLogger(player, "Command was not found!", "Error");
+                            }
+                        }
+                    }
+                }
+            } else {
+                if (args.length > 1) {
+                    if (args[0].equalsIgnoreCase("hide")) {
+                        String commandtohide = "";
+                        for (int i = 1; i < args.length; i++) {
+                            commandtohide = commandtohide.concat(args[i] + " ");
+                        }
+                        if (playerListener.getCommandConfig().addCommand(commandtohide)) {
+                            Logger("Command \"" + commandtohide + "\" added.", "");
+                        } else {
+                            Logger("Command already hidden!", "Error");
+                        }
+                    } else if (args[0].equalsIgnoreCase("remove")) {
+                        String commandtohide = "";
+                        for (int i = 1; i < args.length; i++) {
+                            commandtohide = commandtohide.concat(args[i] + " ");
+                        }
+                        if (playerListener.getCommandConfig().removeCommand(commandtohide)) {
+                            Logger("Command \"" + commandtohide + "\" removed.", "");
+                        } else {
+                            Logger("Command was not found!", "Error");
                         }
                     }
                 }

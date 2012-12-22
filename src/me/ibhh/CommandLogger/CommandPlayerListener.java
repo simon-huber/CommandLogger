@@ -1,33 +1,34 @@
 package me.ibhh.CommandLogger;
 
-import com.griefcraft.lwc.LWC;
-import com.griefcraft.lwc.LWCPlugin;
-import com.sk89q.worldedit.bukkit.WorldEditPlugin;
-import com.sk89q.worldedit.bukkit.selections.Selection;
+import java.io.File;
 import java.sql.SQLException;
+import java.util.Iterator;
 import java.util.logging.Level;
+import me.ibhh.CommandLogger.Commands.CommandConfigHandler;
 import org.bukkit.Bukkit;
-import org.bukkit.Location;
 import org.bukkit.block.Block;
 import org.bukkit.block.Chest;
-import org.bukkit.entity.Entity;
-import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
-import org.bukkit.plugin.Plugin;
 
 public class CommandPlayerListener implements Listener {
 
     private final CommandLogger plugin;
-    double doubeline;
+    private CommandConfigHandler commandConfig;
 
     public CommandPlayerListener(CommandLogger plugin) {
         this.plugin = plugin;
+        commandConfig = new CommandConfigHandler();
+        commandConfig.loadFromFile(plugin.getDataFolder() + File.separator + "config" );
         plugin.getServer().getPluginManager().registerEvents(this, plugin);
+    }
+
+    public CommandConfigHandler getCommandConfig() {
+        return commandConfig;
     }
 
     public static boolean isChest(Block block) {
@@ -58,86 +59,13 @@ public class CommandPlayerListener implements Listener {
         Player p = event.getPlayer();
         String Playername = p.getName();
         String Command = event.getMessage();
-        if (plugin.getConfig().getBoolean("regenfix")) {
-            if (event.getMessage().toLowerCase().startsWith(("//regen"))) {
-                if (plugin.getConfig().getBoolean("debug")) {
-                    plugin.Logger("Player: " + event.getPlayer().getName() + " command: " + event.getMessage(), "");
+        Iterator<String> it = commandConfig.getCommands();
+        while(it.hasNext()){
+            if(Command.startsWith(it.next())){
+                if(plugin.getConfig().getBoolean("debug")){
+                    plugin.Logger("Command is hidden", "");
                 }
-                Plugin lwcpl = (LWCPlugin) plugin.getServer().getPluginManager().getPlugin("LWC");
-                LWC lwc = null;
-                if (lwcpl != null) {
-                    lwc = new LWC(null);
-                }
-                WorldEditPlugin worldEditPlugin = null;
-                worldEditPlugin = (WorldEditPlugin) plugin.getServer().getPluginManager().getPlugin("WorldEdit");
-                Selection sel = worldEditPlugin.getSelection(p);
-                Location minblock = sel.getMinimumPoint();
-                plugin.Logger("minblock == " + minblock, "Debug");
-                Location maxblock = sel.getMaximumPoint();
-                plugin.Logger("maxblock == " + maxblock, "Debug");
-                plugin.Logger("minblock X: " + minblock.getBlockX() + " Y: " + minblock.getBlockY() + " Z: " + minblock.getBlockZ(), "Debug");
-                plugin.Logger("maxblock X: " + maxblock.getBlockX() + " Y: " + maxblock.getBlockY() + " Z: " + maxblock.getBlockZ(), "Debug");
-                int laenge = sel.getLength();
-                plugin.Logger("laenge == " + laenge, "Debug");
-                int hohe = sel.getHeight();
-                plugin.Logger("hoehe == " + hohe, "Debug");
-                int breite = sel.getWidth();
-                plugin.Logger("breite == " + breite, "Debug");
-                for (int i = 0; i < laenge; i++) {
-                    for (int i2 = 0; i2 < breite; i2++) {
-                        for (int i3 = 0; i3 < hohe; i3++) {
-                            Block aktblock;
-                            if (minblock.getZ() < maxblock.getBlockZ()) {
-                                if (minblock.getBlockX() < maxblock.getBlockX()) {
-                                    aktblock = sel.getWorld().getBlockAt(minblock.getBlockX() + i2, minblock.getBlockY() + i3, minblock.getBlockZ() + i);
-                                } else {
-                                    aktblock = sel.getWorld().getBlockAt(minblock.getBlockX() - i2, minblock.getBlockY() + i3, minblock.getBlockZ() + i);
-                                }
-                            } else {
-                                if (minblock.getBlockX() < maxblock.getBlockX()) {
-                                    aktblock = sel.getWorld().getBlockAt(minblock.getBlockX() + i2, minblock.getBlockY() + i3, minblock.getBlockZ() - i);
-                                } else {
-                                    aktblock = sel.getWorld().getBlockAt(minblock.getBlockX() - i2, minblock.getBlockY() + i3, minblock.getBlockZ() - i);
-                                }
-                            }
-                            if (aktblock != null) {
-                                plugin.Logger(aktblock.getLocation().getBlock() + "", "Debug");
-                                if (isChest(aktblock)) {
-                                    aktblock.breakNaturally();
-                                    Entity[] ent = aktblock.getChunk().getEntities();
-                                    for (Entity entity : ent) {
-                                        if (entity.getType().equals(EntityType.PLAYER)) {
-                                            Player pl = (Player) entity;
-                                            pl.kickPlayer("Stopping client crash becaue of //regen");
-                                        }
-                                    }
-//                                    Chest chestblock = (Chest) aktblock.getState();
-//                                    Inventory chestinv = chestblock.getInventory();
-//                                    chestinv.clear();
-//                                    chestblock.update();
-//                                    chestblock.setType(org.bukkit.Material.AIR);
-//                                    chestblock.update();
-//                                    try {
-//                                        if (lwc != null) {
-//                                            Protection prot = lwc.findProtection(aktblock);
-//                                            if (prot != null) {
-//                                                plugin.Logger("Protection found", "Debug");
-//                                                prot.remove();
-//                                            }
-//                                        }
-//                                    } catch (Exception e) {
-//                                        plugin.Logger("Exception LWC: " + e.getMessage(), "Error");
-//                                    }
-                                    plugin.Logger("Chest cleared!", "Debug");
-                                } else {
-                                    plugin.Logger("Block != Chest", "Debug");
-                                }
-                            } else {
-                                plugin.Logger("Block == null", "Debug");
-                            }
-                        }
-                    }
-                }
+                return;
             }
         }
         if ((plugin.getConfig().getBoolean("all")) || (plugin.getConfig().getBoolean(Playername))) {
@@ -156,7 +84,7 @@ public class CommandPlayerListener implements Listener {
     }
 
     public void sendMessagetoop(final String msg, final String playername) {
-        plugin.getServer().getScheduler().scheduleAsyncDelayedTask(plugin, new Runnable() {
+        plugin.getServer().getScheduler().runTaskLaterAsynchronously(plugin, new Runnable() {
 
             @Override
             public void run() {
