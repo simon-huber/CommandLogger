@@ -90,12 +90,7 @@ public class CommandLogger extends JavaPlugin {
         if (getConfig().getBoolean("internet")) {
             try {
                 if (upd.checkUpdate() > currVersion) {
-                    CommandLogger.updateaviable = true;
-                }
-                if (updateaviable) {
                     updateaviable = true;
-                } else {
-                    updateaviable = false;
                 }
             } catch (Exception e) {
                 Logger("Error checking for new version! Message: " + e.getMessage(), "Error");
@@ -242,21 +237,7 @@ public class CommandLogger extends JavaPlugin {
         }
         System.out.println("[CommandLogger] Version: " + this.Version + " successfully enabled!");
         if (getConfig().getBoolean("internet")) {
-            try {
-                aktuelleVersion();
-                UpdateAvailable(Version);
-                if (updateaviable) {
-                    Logger("New version: " + newversion + " found!", "Warning");
-                    Logger("******************************************", "Warning");
-                    Logger("*********** Please update!!!! ************", "Warning");
-                    Logger("* http://ibhh.de/CommandLogger.jar *", "Warning");
-                    Logger("******************************************", "Warning");
-                }
-            } catch (Exception e) {
-                Logger("Error on doing update check! Message: " + e.getMessage(), "Error");
-                Logger("may the mainserver is down!", "Error");
-            }
-            this.getServer().getScheduler().scheduleAsyncRepeatingTask(this, new Runnable() {
+            this.getServer().getScheduler().runTaskTimerAsynchronously(this, new Runnable() {
                 @Override
                 public void run() {
                     try {
@@ -275,7 +256,7 @@ public class CommandLogger extends JavaPlugin {
                             Logger("*********** Please update!!!! ************", "Warning");
                             Logger("* http://ibhh.de/CommandLogger.jar *", "Warning");
                             Logger("******************************************", "Warning");
-                            CommandLogger.updateaviable = true;
+                            updateaviable = true;
                             if (getConfig().getBoolean("installondownload")) {
                                 install();
                             }
@@ -287,10 +268,10 @@ public class CommandLogger extends JavaPlugin {
                         Logger("may the mainserver is down!", "Error");
                     }
                 }
-            }, 400L, 50000L);
+            }, 30, 50000L);
         }
         startStatistics();
-        this.getServer().getScheduler().scheduleAsyncDelayedTask(this, new Runnable() {
+        this.getServer().getScheduler().runTaskLaterAsynchronously(this, new Runnable() {
             @Override
             public void run() {
                 toggle = false;
@@ -359,11 +340,11 @@ public class CommandLogger extends JavaPlugin {
      */
     public float aktuelleVersion() {
         try {
-            this.Version = Float.parseFloat(getDescription().getVersion());
+            Version = Float.parseFloat(getDescription().getVersion());
         } catch (Exception e) {
             System.out.println("[CommandLogger]Could not parse version in float");
         }
-        return this.Version;
+        return Version;
     }
 
     public void onReload() {

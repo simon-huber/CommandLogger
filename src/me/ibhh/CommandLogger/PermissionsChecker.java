@@ -1,7 +1,5 @@
 package me.ibhh.CommandLogger;
 
-
-
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import ru.tehkode.permissions.PermissionManager;
@@ -30,26 +28,20 @@ public class PermissionsChecker {
     }
 
     public void searchpermplugin() {
-        try {
-            plugin.getServer().getServicesManager().getRegistration(ru.tehkode.permissions.bukkit.PermissionsEx.class);
+        if(plugin.getServer().getPluginManager().isPluginEnabled("PermissionsEx")) {
             PermPlugin = 2;
             plugin.Logger("Permissions: Hooked into PermissionsEX!", "Debug");
             return;
-        } catch (NoClassDefFoundError e) {
         }
-        try {
-            plugin.getServer().getServicesManager().getRegistration(org.anjocaido.groupmanager.GroupManager.class);
+        if(plugin.getServer().getPluginManager().isPluginEnabled("GroupManager")) {
             PermPlugin = 3;
             plugin.Logger("Permissions: Hooked into GroupManager!", "Debug");
             return;
-        } catch (NoClassDefFoundError e) {
         }
-        try {
-            plugin.getServer().getServicesManager().getRegistration(de.bananaco.bpermissions.api.util.CalculableType.class);
+        if (plugin.getServer().getPluginManager().isPluginEnabled("bPermissions")) {
             PermPlugin = 4;
             plugin.Logger("Permissions: Hooked into bPermissions!", "Debug");
             return;
-        } catch (NoClassDefFoundError e) {
         }
         PermPlugin = 1;
     }
