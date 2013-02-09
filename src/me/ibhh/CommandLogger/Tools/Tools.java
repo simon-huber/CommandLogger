@@ -70,8 +70,4 @@ public class Tools {
         } 
         return 0;
     }
-    
-    public static void writeLogsToFile(LogElement[] log){
-        
-    }
 }

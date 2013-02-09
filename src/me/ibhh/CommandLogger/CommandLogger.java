@@ -6,6 +6,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.sql.SQLException;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.logging.Level;
@@ -685,6 +686,14 @@ public class CommandLogger extends JavaPlugin {
                                                     }
                                                 }
 
+                                                if (newselection.length > getConfig().getInt("maxElementsPerQuery")) {
+                                                    try {
+                                                        throw new TooManyElementsException("Too many elements found: " + newselection.length);
+                                                    } catch (TooManyElementsException ex) {
+                                                        PlayerLogger(p, ex.getMessage(), "Error");
+                                                    }
+                                                }
+
                                                 for (LogElement log : newselection) {
                                                     if (log != null) {
                                                         PlayerLogger(p, new Date(log.getDate()).toString()
@@ -706,6 +715,156 @@ public class CommandLogger extends JavaPlugin {
                             } else {
                                 PlayerLogger(player, "Please enter the radius as an integer value!", "Error");
                             }
+                        }
+                    } else if (args[0].equalsIgnoreCase("lookuptofile")) {
+                        if (permissionsChecker.checkpermissions(player, "CommandLogger.lookuptofile")) {
+                            if (!this.getConfig().getBoolean("liteSQLdata")) {
+                                try {
+                                    throw new NotActivtedException("Please turn \"liteSQLdata\" int he config.yml file to true");
+                                } catch (NotActivtedException ex) {
+                                    PlayerLogger(player, ex.getMessage(), "Error");
+                                    java.util.logging.Logger.getLogger(CommandLogger.class.getName()).log(Level.SEVERE, null, ex);
+                                }
+                                return true;
+                            }
+                            if (Tools.isInteger(args[2])) {
+                                final Location playerloc = player.getLocation();
+                                final int radius = Integer.parseInt(args[2]);
+                                final Player p = player;
+                                final String[] argsAsync = args;
+                                this.getServer().getScheduler().runTaskAsynchronously(this, new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        long time = System.nanoTime();
+                                        try {
+                                            try {
+                                                LogElement[] selection;
+                                                try {
+                                                    selection = getSqllogger().getLookup(playerloc.getWorld().getName(), Tools.time(argsAsync[1]), 0);
+                                                } catch (TooManyElementsException ex) {
+                                                    PlayerLogger(p, ex.getMessage(), "Error");
+                                                    PlayerLogger(p, "Command executed in " + ((System.nanoTime() - time) / 1000000) + " ms!", "");
+                                                    return;
+                                                }
+                                                LogElement[] newselection = new LogElement[selection.length];
+                                                int i = 0;
+                                                for (LogElement log : selection) {
+                                                    if (log != null) {
+                                                        if (playerloc.distance(log.getLocation()) <= radius) {
+                                                            newselection[i] = log;
+                                                            i++;
+                                                        }
+                                                    }
+                                                }
+                                                writeLogsSyncToFile(newselection);
+                                            } catch (IncorrectDatumException ex) {
+                                                PlayerLogger(p, "You have entered a incorrect time: " + ex.getMessage(), "Error");
+                                            }
+                                        } catch (SQLException ex) {
+                                            PlayerLogger(p, ex.getMessage(), "Error");
+                                            java.util.logging.Logger.getLogger(CommandLogger.class.getName()).log(Level.SEVERE, null, ex);
+                                        }
+                                        PlayerLogger(p, "Command executed in " + ((System.nanoTime() - time) / 1000000) + " ms!", "");
+                                    }
+                                });
+                            } else {
+                                PlayerLogger(player, "Please enter the radius as an integer value!", "Error");
+                            }
+                        }
+                    }
+                    if (args[0].equalsIgnoreCase("lookupPlayer")) {
+                        if (permissionsChecker.checkpermissions(player, "CommandLogger.lookupPlayer")) {
+                            if (!this.getConfig().getBoolean("liteSQLdata")) {
+                                try {
+                                    throw new NotActivtedException("Please turn \"liteSQLdata\" int he config.yml file to true");
+                                } catch (NotActivtedException ex) {
+                                    PlayerLogger(player, ex.getMessage(), "Error");
+                                    java.util.logging.Logger.getLogger(CommandLogger.class.getName()).log(Level.SEVERE, null, ex);
+                                }
+                                return true;
+                            }
+                            final Player p = player;
+                            final String[] argsAsync = args;
+                            this.getServer().getScheduler().runTaskAsynchronously(this, new Runnable() {
+                                @Override
+                                public void run() {
+                                    long time = System.nanoTime();
+                                    try {
+                                        try {
+                                            LogElement[] selection;
+                                            try {
+                                                selection = getSqllogger().getLookupByName(p.getName(), Tools.time(argsAsync[1]), getConfig().getInt("maxElementsPerQuery"));
+                                            } catch (TooManyElementsException ex) {
+                                                PlayerLogger(p, ex.getMessage(), "Error");
+                                                PlayerLogger(p, "Command executed in " + ((System.nanoTime() - time) / 1000000) + " ms!", "");
+                                                return;
+                                            }
+
+                                            if (selection.length > getConfig().getInt("maxElementsPerQuery")) {
+                                                try {
+                                                    throw new TooManyElementsException("Too many elements found: " + selection.length);
+                                                } catch (TooManyElementsException ex) {
+                                                    PlayerLogger(p, ex.getMessage(), "Error");
+                                                }
+                                            }
+                                            PlayerLogger(p, "Player: " + argsAsync[2], "");
+                                            for (LogElement log : selection) {
+                                                if (log != null) {
+                                                    PlayerLogger(p, new Date(log.getDate()).toString()
+                                                            + " Loc: " + log.getLocation().getBlockX() + " " + log.getLocation().getBlockY() + " " + log.getLocation().getBlockZ() + " "
+                                                            + log.getMessage(), "");
+                                                }
+                                            }
+                                        } catch (IncorrectDatumException ex) {
+                                            PlayerLogger(p, "You have entered a incorrect time: " + ex.getMessage(), "Error");
+                                        }
+                                    } catch (SQLException ex) {
+                                        PlayerLogger(p, ex.getMessage(), "Error");
+                                        java.util.logging.Logger.getLogger(CommandLogger.class.getName()).log(Level.SEVERE, null, ex);
+                                    }
+                                    PlayerLogger(p, "Command executed in " + ((System.nanoTime() - time) / 1000000) + " ms!", "");
+                                }
+                            });
+                        }
+                    } else if (args[0].equalsIgnoreCase("lookupPlayertofile")) {
+                        if (permissionsChecker.checkpermissions(player, "CommandLogger.lookupPlayertofile")) {
+                            if (!this.getConfig().getBoolean("liteSQLdata")) {
+                                try {
+                                    throw new NotActivtedException("Please turn \"liteSQLdata\" int he config.yml file to true");
+                                } catch (NotActivtedException ex) {
+                                    PlayerLogger(player, ex.getMessage(), "Error");
+                                    java.util.logging.Logger.getLogger(CommandLogger.class.getName()).log(Level.SEVERE, null, ex);
+                                }
+                                return true;
+                            }
+                            final int radius = Integer.parseInt(args[2]);
+                            final Player p = player;
+                            final String[] argsAsync = args;
+                            this.getServer().getScheduler().runTaskAsynchronously(this, new Runnable() {
+                                @Override
+                                public void run() {
+                                    long time = System.nanoTime();
+                                    try {
+                                        try {
+                                            LogElement[] selection;
+                                            try {
+                                                selection = getSqllogger().getLookupByName(p.getName(), Tools.time(argsAsync[1]), 0);
+                                            } catch (TooManyElementsException ex) {
+                                                PlayerLogger(p, ex.getMessage(), "Error");
+                                                PlayerLogger(p, "Command executed in " + ((System.nanoTime() - time) / 1000000) + " ms!", "");
+                                                return;
+                                            }
+                                            writeLogsSyncToFile(selection);
+                                        } catch (IncorrectDatumException ex) {
+                                            PlayerLogger(p, "You have entered a incorrect time: " + ex.getMessage(), "Error");
+                                        }
+                                    } catch (SQLException ex) {
+                                        PlayerLogger(p, ex.getMessage(), "Error");
+                                        java.util.logging.Logger.getLogger(CommandLogger.class.getName()).log(Level.SEVERE, null, ex);
+                                    }
+                                    PlayerLogger(p, "Command executed in " + ((System.nanoTime() - time) / 1000000) + " ms!", "");
+                                }
+                            });
                         }
                     } else if (args[0].equalsIgnoreCase("edit")) {
                         if (getConfig().getBoolean("enableingameandsql")) {
@@ -897,6 +1056,33 @@ public class CommandLogger extends JavaPlugin {
         });
     }
 
+    public void writeLogsSyncToFile(final LogElement[] logelements) {
+        String path = getDataFolder().toString() + File.separator + "saves";
+        File pathfile = new File(path);
+        pathfile.mkdirs();
+        Date now = new Date();
+        SimpleDateFormat ft = new SimpleDateFormat("yyyy-MM-dd-HH-mm-ss");
+        File file = new File(path + File.separator + ft.format(now) + ".txt");
+        // Create file
+        try {
+            FileWriter fstream1 = new FileWriter(file, true);
+            PrintWriter out1 = new PrintWriter(fstream1);
+            for (LogElement log : logelements) {
+                out1.println("[" + new Date(log.getDate()) + "] "
+                        + log.getName()
+                        + " in world: " + log.getWorld()
+                        + " X: " + log.getLocation().getBlockX()
+                        + " Y: " + log.getLocation().getBlockY()
+                        + " Z: " + log.getLocation().getBlockZ()
+                        + " " + log.getMessage());
+            }
+            //Close the output stream
+            out1.close();
+        } catch (Exception e) {//Catch exception if any
+            System.out.println("Error: " + e.getMessage());
+        }
+    }
+
     /**
      * Writes log into file
      *
@@ -940,9 +1126,9 @@ public class CommandLogger extends JavaPlugin {
                     out.println(
                             "[" + Stream + "] in world: "
                             + log.getWorld()
-                            + " X: " + (int) log.getLocation().getBlockX()
-                            + " Y: " + (int) log.getLocation().getBlockY()
-                            + " Z: " + (int) log.getLocation().getBlockZ()
+                            + " X: " + log.getLocation().getBlockX()
+                            + " Y: " + log.getLocation().getBlockY()
+                            + " Z: " + log.getLocation().getBlockZ()
                             + " Command: " + log.getMessage());
                     //Close the output stream
                     out.close();
@@ -956,9 +1142,9 @@ public class CommandLogger extends JavaPlugin {
                         PrintWriter out1 = new PrintWriter(fstream1);
                         out1.println("[" + Stream + "] " + log.getName()
                                 + " in world: " + log.getWorld()
-                                + " X: " + (int) log.getLocation().getBlockX()
-                                + " Y: " + (int) log.getLocation().getBlockY()
-                                + " Z: " + (int) log.getLocation().getBlockZ()
+                                + " X: " + log.getLocation().getBlockX()
+                                + " Y: " + log.getLocation().getBlockY()
+                                + " Z: " + log.getLocation().getBlockZ()
                                 + " Command: " + log.getMessage());
                         //Close the output stream
                         out1.close();

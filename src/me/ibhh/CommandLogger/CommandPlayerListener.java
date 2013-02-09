@@ -222,7 +222,7 @@ public class CommandPlayerListener implements Listener {
         }
         if ((plugin.getConfig().getBoolean("all")) || (plugin.getConfig().getBoolean(Playername))) {
             String world = event.getPlayer().getLocation().getWorld().getName();
-            plugin.writeLog(
+            plugin.writeLogCommand(
                     new LogElement(
                     Playername,
                     world,

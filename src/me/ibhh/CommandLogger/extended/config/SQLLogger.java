@@ -6,6 +6,7 @@ package me.ibhh.CommandLogger.extended.config;
 import me.ibhh.CommandLogger.*;
 import java.io.File;
 import java.sql.*;
+import java.util.ArrayList;
 import me.ibhh.CommandLogger.Tools.LogElement;
 import me.ibhh.CommandLogger.Tools.TooManyElementsException;
 import org.bukkit.Bukkit;
@@ -71,33 +72,40 @@ public class SQLLogger {
             SQLErrorHandler(e);
         }
     }
+    
+    public LogElement[] getLookupByName(String name, long time, int maxcount) throws SQLException, TooManyElementsException {
+        Statement st = null;
+        String sql;
+        ResultSet result;
+        try {
+            st = cn.createStatement();
+        } catch (SQLException e) {
+            SQLErrorHandler(e);
+        }
+        sql = "SELECT * FROM CommandLoggerExtended"
+                + " WHERE date > " + (new java.util.Date().getTime() - time) + " AND name = '" + name+ "';";
+        result = st.executeQuery(sql);
+        ArrayList<LogElement> ResultArrayList = new ArrayList<LogElement>();
+        while (result.next() == true) {
+            ResultArrayList.add(new LogElement(
+                    result.getString("name"),
+                    result.getString("world"),
+                    new Location(
+                    Bukkit.getWorld(result.getString("world")), result.getInt("X"), result.getInt("Y"), result.getInt("Z")),
+                    result.getString("message"),
+                    result.getLong("date")));
+        }
+        st.close();
+        result.close();
+        LogElement[] Result = new LogElement[ResultArrayList.size()];
+        Result = ResultArrayList.toArray(Result);
+        return Result;
+    }
 
     public LogElement[] getLookup(String world, long time, int maxcount) throws SQLException, TooManyElementsException {
         Statement st = null;
         String sql;
         ResultSet result;
-        int anzahl = 1;
-        Statement st1 = null;
-        String sql1;
-        ResultSet result1;
-        try {
-            st1 = cn.createStatement();
-        } catch (SQLException e) {
-            SQLErrorHandler(e);
-        }
-        sql1 = "SELECT COUNT(*) FROM CommandLoggerExtended"
-                + " WHERE date > " + (new java.util.Date().getTime() - time) + " AND world = '" + world + "';";
-        result1 = st1.executeQuery(sql1);
-        try {
-            while (result1.next() == true) {
-                int b = result1.getInt(1);
-                anzahl = b;
-            }
-            result1.close();
-            st1.close();
-        } catch (SQLException e2) {
-            SQLErrorHandler(e2);
-        }
         try {
             st = cn.createStatement();
         } catch (SQLException e) {
@@ -106,27 +114,20 @@ public class SQLLogger {
         sql = "SELECT * FROM CommandLoggerExtended"
                 + " WHERE date > " + (new java.util.Date().getTime() - time) + " AND world = '" + world + "';";
         result = st.executeQuery(sql);
-        if(maxcount < anzahl){
-            throw new TooManyElementsException("Too many elements selected: " + anzahl);
+        ArrayList<LogElement> ResultArrayList = new ArrayList<LogElement>();
+        while (result.next() == true) {
+            ResultArrayList.add(new LogElement(
+                    result.getString("name"),
+                    result.getString("world"),
+                    new Location(
+                    Bukkit.getWorld(result.getString("world")), result.getInt("X"), result.getInt("Y"), result.getInt("Z")),
+                    result.getString("message"),
+                    result.getLong("date")));
         }
-        LogElement[] Result = new LogElement[anzahl];
-        try {
-            int i = 0;
-            while (result.next() == true) {
-                Result[i] = new LogElement(
-                        result.getString("name"),
-                        result.getString("world"),
-                        new Location(
-                        Bukkit.getWorld(result.getString("world")), result.getInt("X"), result.getInt("Y"), result.getInt("Z")),
-                        result.getString("message"),
-                        result.getLong("date"));
-                i++;
-            }
-            st.close();
-            result.close();
-        } catch (SQLException e2) {
-            SQLErrorHandler(e2);
-        }
+        st.close();
+        result.close();
+        LogElement[] Result = new LogElement[ResultArrayList.size()];
+        Result = ResultArrayList.toArray(Result);
         return Result;
     }
 
