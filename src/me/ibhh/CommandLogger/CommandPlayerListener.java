@@ -5,6 +5,7 @@ import java.sql.SQLException;
 import java.util.Iterator;
 import java.util.logging.Level;
 import me.ibhh.CommandLogger.Commands.CommandConfigHandler;
+import me.ibhh.CommandLogger.Tools.LogElement;
 import org.bukkit.Bukkit;
 import org.bukkit.block.Block;
 import org.bukkit.block.Chest;
@@ -12,8 +13,17 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.entity.PlayerDeathEvent;
+import org.bukkit.event.player.PlayerChannelEvent;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
+import org.bukkit.event.player.PlayerDropItemEvent;
+import org.bukkit.event.player.PlayerEvent;
+import org.bukkit.event.player.PlayerGameModeChangeEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerKickEvent;
+import org.bukkit.event.player.PlayerLevelChangeEvent;
+import org.bukkit.event.player.PlayerPickupItemEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 
 public class CommandPlayerListener implements Listener {
 
@@ -23,12 +33,154 @@ public class CommandPlayerListener implements Listener {
     public CommandPlayerListener(CommandLogger plugin) {
         this.plugin = plugin;
         commandConfig = new CommandConfigHandler();
-        commandConfig.loadFromFile(plugin.getDataFolder() + File.separator + "config" );
+        commandConfig.loadFromFile(plugin.getDataFolder() + File.separator + "config");
         plugin.getServer().getPluginManager().registerEvents(this, plugin);
     }
 
     public CommandConfigHandler getCommandConfig() {
         return commandConfig;
+    }
+
+    @EventHandler(priority = EventPriority.HIGH)
+    public void PlayerItemDrop(PlayerDropItemEvent event) {
+        if (plugin.getExtendedConfig().getConfig() == null) {
+            return;
+        }
+        if (plugin.getExtendedConfig().getConfig().getBoolean("PlayerDropItemEvent")
+                && plugin.getExtendedConfig().getConfig().getBoolean("enableExtendedLogger")) {
+            plugin.writeLog(
+                    new LogElement(
+                    event.getPlayer().getName(),
+                    event.getPlayer().getWorld().getName(),
+                    event.getEventName()
+                    + " Item: \"" + event.getItemDrop().getItemStack().getType().name()
+                    + "\" Amount: \"" + event.getItemDrop().getItemStack().getAmount()
+                    + "\" Pickup delay: \"" + event.getItemDrop().getPickupDelay() + "\"",
+                    event.getPlayer().getLocation()));
+        }
+    }
+
+    @EventHandler(priority = EventPriority.HIGH)
+    public void PlayerDeath(PlayerDeathEvent event) {
+        if (plugin.getExtendedConfig().getConfig() == null) {
+            return;
+        }
+        if (plugin.getExtendedConfig().getConfig().getBoolean("PlayerDeathEvent")
+                && plugin.getExtendedConfig().getConfig().getBoolean("enableExtendedLogger")) {
+            plugin.writeLog(
+                    new LogElement(event.getEntity().getName(),
+                    event.getEntity().getWorld().getName(),
+                    event.getEventName()
+                    + " Message: \"" + event.getDeathMessage() + "\"",
+                    event.getEntity().getLocation()));
+        }
+    }
+
+    @EventHandler(priority = EventPriority.HIGH)
+    public void PlayerGameModeChange(PlayerGameModeChangeEvent event) {
+        if (plugin.getExtendedConfig().getConfig() == null) {
+            return;
+        }
+        if (plugin.getExtendedConfig().getConfig().getBoolean("PlayerGameModeChangeEvent")
+                && plugin.getExtendedConfig().getConfig().getBoolean("enableExtendedLogger")) {
+            plugin.writeLog(
+                    new LogElement(
+                    event.getPlayer().getName(),
+                    event.getPlayer().getWorld().getName(),
+                    event.getEventName()
+                    + " New GM: \"" + event.getNewGameMode().name() + "\"",
+                    event.getPlayer().getLocation()));
+        }
+    }
+
+    @EventHandler
+    public void PlayerLevelChange(PlayerLevelChangeEvent event) {
+        if (plugin.getExtendedConfig().getConfig() == null) {
+            return;
+        }
+        if (plugin.getExtendedConfig().getConfig().getBoolean("PlayerLevelChangeEvent")
+                && plugin.getExtendedConfig().getConfig().getBoolean("enableExtendedLogger")) {
+            plugin.writeLog(
+                    new LogElement(
+                    event.getPlayer().getName(),
+                    event.getPlayer().getWorld().getName(),
+                    event.getEventName()
+                    + " Old Level: \"" + event.getOldLevel()
+                    + "\" New Level: \"" + event.getNewLevel() + "\"",
+                    event.getPlayer().getLocation()));
+        }
+    }
+
+    @EventHandler
+    public void PlayerQuit(PlayerQuitEvent event) {
+        if (plugin.getExtendedConfig().getConfig() == null) {
+            return;
+        }
+        if (plugin.getExtendedConfig().getConfig().getBoolean("PlayerQuitEvent")
+                && plugin.getExtendedConfig().getConfig().getBoolean("enableExtendedLogger")) {
+            plugin.writeLog(
+                    new LogElement(
+                    event.getPlayer().getName(),
+                    event.getPlayer().getWorld().getName(),
+                    event.getEventName()
+                    + " Quit Message: \"" + event.getQuitMessage() + "\"",
+                    event.getPlayer().getLocation()));
+        }
+    }
+
+    @EventHandler
+    public void PlayerJoin(PlayerJoinEvent event) {
+        if (plugin.getExtendedConfig().getConfig() == null) {
+            return;
+        }
+        if (plugin.getExtendedConfig().getConfig().getBoolean("PlayerJoinEvent")
+                && plugin.getExtendedConfig().getConfig().getBoolean("enableExtendedLogger")) {
+            plugin.writeLog(
+                    new LogElement(
+                    event.getPlayer().getName(),
+                    event.getPlayer().getWorld().getName(),
+                    event.getEventName()
+                    + " Join message: \"" + event.getJoinMessage() + "\"",
+                    event.getPlayer().getLocation()));
+        }
+    }
+
+    @EventHandler
+    public void PlayerKick(PlayerKickEvent event) {
+        if (plugin.getExtendedConfig().getConfig() == null) {
+            return;
+        }
+        if (plugin.getExtendedConfig().getConfig().getBoolean("PlayerKickEvent")
+                && plugin.getExtendedConfig().getConfig().getBoolean("enableExtendedLogger")) {
+            plugin.writeLog(
+                    new LogElement(
+                    event.getPlayer().getName(),
+                    event.getPlayer().getWorld().getName(),
+                    event.getEventName()
+                    + " Reason: \"" + event.getReason()
+                    + "\" Leave Message: \"" + event.getLeaveMessage() + "\"",
+                    event.getPlayer().getLocation()));
+        }
+    }
+
+    @EventHandler
+    public void PlayerPickupItem(PlayerPickupItemEvent event) {
+        if (plugin.getExtendedConfig().getConfig() == null) {
+            return;
+        }
+        if (plugin.getExtendedConfig().getConfig().getBoolean("PlayerPickupItemEvent")
+                && plugin.getExtendedConfig().getConfig().getBoolean("enableExtendedLogger")) {
+            plugin.writeLog(
+                    new LogElement(
+                    event.getPlayer().getName(),
+                    event.getPlayer().getWorld().getName(),
+                    event.getEventName()
+                    + " Item: \"" + event.getItem().getItemStack().getType().name()
+                    + "\" Amount: \"" + event.getItem().getItemStack().getAmount()
+                    + "\" Remaining: \"" + event.getRemaining()
+                    + "\" Pickup delay: \"" + event.getItem().getPickupDelay() + "\"",
+                    event.getPlayer().getLocation()));
+        }
     }
 
     public static boolean isChest(Block block) {
@@ -37,7 +189,7 @@ public class CommandPlayerListener implements Listener {
 
     @EventHandler(priority = EventPriority.HIGH)
     public void join(PlayerJoinEvent event) {
-        if(plugin.toggle){
+        if (plugin.toggle) {
             return;
         }
         if (plugin.permissionsChecker.checkpermissionssilent(event.getPlayer(), "CommandLogger.admin")) {
@@ -53,16 +205,16 @@ public class CommandPlayerListener implements Listener {
 
     @EventHandler(priority = EventPriority.HIGH)
     public void onCommandPreprocess(PlayerCommandPreprocessEvent event) {
-        if(plugin.toggle){
+        if (plugin.toggle) {
             return;
         }
         Player p = event.getPlayer();
         String Playername = p.getName();
         String Command = event.getMessage();
         Iterator<String> it = commandConfig.getCommands();
-        while(it.hasNext()){
-            if(Command.startsWith(it.next())){
-                if(plugin.getConfig().getBoolean("debug")){
+        while (it.hasNext()) {
+            if (Command.startsWith(it.next())) {
+                if (plugin.getConfig().getBoolean("debug")) {
                     plugin.Logger("Command is hidden", "");
                 }
                 return;
@@ -70,10 +222,12 @@ public class CommandPlayerListener implements Listener {
         }
         if ((plugin.getConfig().getBoolean("all")) || (plugin.getConfig().getBoolean(Playername))) {
             String world = event.getPlayer().getLocation().getWorld().getName();
-            int X = event.getPlayer().getLocation().getBlockX();
-            int Y = event.getPlayer().getLocation().getBlockY();
-            int Z = event.getPlayer().getLocation().getBlockZ();
-            plugin.writeLog(Playername, Command, world, X, Y, Z);
+            plugin.writeLog(
+                    new LogElement(
+                    Playername,
+                    world,
+                    Command,
+                    event.getPlayer().getLocation()));
             if (plugin.getConfig().getBoolean("showcommandsonconsole")) {
                 System.out.println("[CommandLogger] Player: " + Playername + " Command: " + Command);
             }
@@ -85,7 +239,6 @@ public class CommandPlayerListener implements Listener {
 
     public void sendMessagetoop(final String msg, final String playername) {
         plugin.getServer().getScheduler().runTaskLaterAsynchronously(plugin, new Runnable() {
-
             @Override
             public void run() {
                 for (Player player : Bukkit.getServer().getOnlinePlayers()) {

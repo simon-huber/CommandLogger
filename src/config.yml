@@ -9,6 +9,10 @@ PrefixColor: b
 TextColor: 6
 enableingameandsql: true
 showcommandsonconsole: true
+liteSQLdata: false
+maxLookupRadius: 20
+maxElementsPerQuery: 45
+CleanUPAfter: 4w
 permissions:
   error:
     de: Wir haben ein Problem! Dies darfst Du nicht machen!

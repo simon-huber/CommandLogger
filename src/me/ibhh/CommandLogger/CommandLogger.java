@@ -9,7 +9,15 @@ import java.sql.SQLException;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.logging.Level;
+import me.ibhh.CommandLogger.Tools.IncorrectDatumException;
+import me.ibhh.CommandLogger.Tools.LogElement;
+import me.ibhh.CommandLogger.Tools.LookupRadiusTooBigException;
+import me.ibhh.CommandLogger.Tools.NotActivtedException;
+import me.ibhh.CommandLogger.Tools.TooManyElementsException;
+import me.ibhh.CommandLogger.extended.config.ExtendedLoggerConfig;
+import me.ibhh.CommandLogger.extended.config.SQLLogger;
 import org.bukkit.ChatColor;
+import org.bukkit.Location;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -33,6 +41,8 @@ public class CommandLogger extends JavaPlugin {
     public PlayerManager playerManager;
     public Update upd;
     public boolean toggle = true;
+    private ExtendedLoggerConfig extendedConfig;
+    private SQLLogger sqllogger;
     private HashMap<Player, String> Config = new HashMap<Player, String>();
     private HashMap<Player, String> Set = new HashMap<Player, String>();
 
@@ -79,6 +89,28 @@ public class CommandLogger extends JavaPlugin {
         }
         Logger("Installing finished!", "");
         playerManager.BroadcastMsg("CommandLogger.update", "Installing finished!");
+    }
+
+    public ExtendedLoggerConfig getExtendedConfig() {
+        if (extendedConfig == null) {
+            extendedConfig = new ExtendedLoggerConfig(this);
+        }
+        return extendedConfig;
+    }
+
+    public SQLLogger getSqllogger() {
+        if (this.getConfig().getBoolean("liteSQLdata")) {
+            if (sqllogger == null) {
+                sqllogger = new SQLLogger(this);
+            }
+        } else {
+            try {
+                throw new NotActivtedException("Please turn \"liteSQLdata\" int he config.yml file to true");
+            } catch (NotActivtedException ex) {
+                java.util.logging.Logger.getLogger(CommandLogger.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+        return sqllogger;
     }
 
     /**
@@ -175,6 +207,9 @@ public class CommandLogger extends JavaPlugin {
     @Override
     public void onDisable() {
         toggle = true;
+        if (this.getConfig().getBoolean("liteSQLdata")) {
+            getSqllogger().CloseCon();
+        }
         playerListener.getCommandConfig().saveToFile(this.getDataFolder() + File.separator + "config");
         if (getConfig().getBoolean("internet")) {
             forceUpdate();
@@ -226,6 +261,11 @@ public class CommandLogger extends JavaPlugin {
         Text = ChatColor.getByChar(getConfig().getString("TextColor"));
         upd = new Update(this);
         playerListener = new CommandPlayerListener(this);
+        //Init the extended config and load
+        getExtendedConfig();
+        if (this.getConfig().getBoolean("liteSQLdata")) {
+            getSqllogger();
+        }
         permissionsChecker = new PermissionsChecker(this, "main");
         plugman = new Utilities(this);
         playerManager = new PlayerManager(this);
@@ -275,6 +315,14 @@ public class CommandLogger extends JavaPlugin {
             @Override
             public void run() {
                 toggle = false;
+                if (getConfig().getBoolean("liteSQLdata")) {
+                    try {
+                        getSqllogger().deleteOldEntries(Tools.time(getConfig().getString("CleanUPAfter")));
+                    } catch (IncorrectDatumException ex) {
+                        java.util.logging.Logger.getLogger(CommandLogger.class.getName()).log(Level.SEVERE, null, ex);
+                        Logger("Please change the config.yml file! There is an error!", "Error");
+                    }
+                }
             }
         }, 20);
     }
@@ -589,7 +637,77 @@ public class CommandLogger extends JavaPlugin {
                         }
                     }
                 } else if (args.length == 3) {
-                    if (args[0].equalsIgnoreCase("edit")) {
+                    if (args[0].equalsIgnoreCase("lookup")) {
+                        if (permissionsChecker.checkpermissions(player, "CommandLogger.lookup")) {
+                            if (!this.getConfig().getBoolean("liteSQLdata")) {
+                                try {
+                                    throw new NotActivtedException("Please turn \"liteSQLdata\" int he config.yml file to true");
+                                } catch (NotActivtedException ex) {
+                                    PlayerLogger(player, ex.getMessage(), "Error");
+                                    java.util.logging.Logger.getLogger(CommandLogger.class.getName()).log(Level.SEVERE, null, ex);
+                                }
+                                return true;
+                            }
+                            if (Tools.isInteger(args[2])) {
+                                final Location playerloc = player.getLocation();
+                                final int radius = Integer.parseInt(args[2]);
+                                if (radius > this.getConfig().getInt("maxLookupRadius")) {
+                                    try {
+                                        throw new LookupRadiusTooBigException("maxLookupRadius: " + this.getConfig().getInt("maxLookupRadius"));
+                                    } catch (LookupRadiusTooBigException ex) {
+                                        PlayerLogger(player, ex.getMessage(), "Error");
+                                    }
+                                }
+                                final Player p = player;
+                                final String[] argsAsync = args;
+                                this.getServer().getScheduler().runTaskAsynchronously(this, new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        long time = System.nanoTime();
+                                        try {
+                                            try {
+                                                LogElement[] selection;
+                                                try {
+                                                    selection = getSqllogger().getLookup(playerloc.getWorld().getName(), Tools.time(argsAsync[1]), getConfig().getInt("maxElementsPerQuery"));
+                                                } catch (TooManyElementsException ex) {
+                                                    PlayerLogger(p, ex.getMessage(), "Error");
+                                                    PlayerLogger(p, "Command executed in " + ((System.nanoTime() - time) / 1000000) + " ms!", "");
+                                                    return;
+                                                }
+                                                LogElement[] newselection = new LogElement[selection.length];
+                                                int i = 0;
+                                                for (LogElement log : selection) {
+                                                    if (log != null) {
+                                                        if (playerloc.distance(log.getLocation()) <= radius) {
+                                                            newselection[i] = log;
+                                                            i++;
+                                                        }
+                                                    }
+                                                }
+
+                                                for (LogElement log : newselection) {
+                                                    if (log != null) {
+                                                        PlayerLogger(p, new Date(log.getDate()).toString()
+                                                                + " Player: " + log.getName()
+                                                                + " Loc: " + log.getLocation().getBlockX() + " " + log.getLocation().getBlockY() + " " + log.getLocation().getBlockZ() + " "
+                                                                + log.getMessage(), "");
+                                                    }
+                                                }
+                                            } catch (IncorrectDatumException ex) {
+                                                PlayerLogger(p, "You have entered a incorrect time: " + ex.getMessage(), "Error");
+                                            }
+                                        } catch (SQLException ex) {
+                                            PlayerLogger(p, ex.getMessage(), "Error");
+                                            java.util.logging.Logger.getLogger(CommandLogger.class.getName()).log(Level.SEVERE, null, ex);
+                                        }
+                                        PlayerLogger(p, "Command executed in " + ((System.nanoTime() - time) / 1000000) + " ms!", "");
+                                    }
+                                });
+                            } else {
+                                PlayerLogger(player, "Please enter the radius as an integer value!", "Error");
+                            }
+                        }
+                    } else if (args[0].equalsIgnoreCase("edit")) {
                         if (getConfig().getBoolean("enableingameandsql")) {
                             if (permissionsChecker.checkpermissions(player, "CommandLogger.spy")) {
                                 final String[] args1 = args;
@@ -715,6 +833,72 @@ public class CommandLogger extends JavaPlugin {
 
     /**
      * Writes log into file
+     */
+    public void writeLog(final LogElement log) {
+        this.getServer().getScheduler().runTaskAsynchronously(this, new Runnable() {
+            @Override
+            public void run() {
+                Date now = new Date();
+                if (getConfig().getBoolean("liteSQLdata")) {
+                    getSqllogger().Insert(log);
+                }
+                String Stream = now.toString();
+                String path = getDataFolder().toString() + "/";
+                File file1 = new File(path + "allfile" + ".txt");
+                File file = new File(path + log.getName() + ".txt");
+                if (!file.exists()) {
+                    try {
+                        file.createNewFile();
+                    } catch (IOException ex) {
+                        System.out.println("Error: " + ex.getMessage());
+                    }
+                }
+                if (!file1.exists()) {
+                    try {
+                        file1.createNewFile();
+                    } catch (IOException ex) {
+                        System.out.println("Error: " + ex.getMessage());
+                    }
+                }
+                try {
+                    // Create file
+                    FileWriter fstream = new FileWriter(file, true);
+                    PrintWriter out = new PrintWriter(fstream);
+                    out.println("[" + Stream + "] in world: "
+                            + log.getWorld()
+                            + " X: " + (int) log.getLocation().getBlockX()
+                            + " Y: " + (int) log.getLocation().getY()
+                            + " Z: " + (int) log.getLocation().getZ()
+                            + " " + log.getMessage());
+                    //Close the output stream
+                    out.close();
+                } catch (Exception e) {//Catch exception if any
+                    System.out.println("Error: " + e.getMessage());
+                }
+                if (getConfig().getBoolean("allfile")) {
+                    try {
+                        // Create file
+                        FileWriter fstream1 = new FileWriter(file1, true);
+                        PrintWriter out1 = new PrintWriter(fstream1);
+                        out1.println("[" + Stream + "] "
+                                + log.getName()
+                                + " in world: " + log.getWorld()
+                                + " X: " + (int) log.getLocation().getBlockX()
+                                + " Y: " + (int) log.getLocation().getY()
+                                + " Z: " + (int) log.getLocation().getZ()
+                                + " " + log.getMessage());
+                        //Close the output stream
+                        out1.close();
+                    } catch (Exception e) {//Catch exception if any
+                        System.out.println("Error: " + e.getMessage());
+                    }
+                }
+            }
+        });
+    }
+
+    /**
+     * Writes log into file
      *
      * @param Playername
      * @param Command
@@ -723,48 +907,67 @@ public class CommandLogger extends JavaPlugin {
      * @param Y
      * @param Z
      */
-    public void writeLog(String Playername, String Command, String world, int X, int Y, int Z) {
-        Date now = new Date();
-        String Stream = now.toString();
-        String path = getDataFolder().toString() + "/";
-        File file1 = new File(path + "allfile" + ".txt");
-        File file = new File(path + Playername + ".txt");
-        if (!file.exists()) {
-            try {
-                file.createNewFile();
-            } catch (IOException ex) {
-                System.out.println("Error: " + ex.getMessage());
+    public void writeLogCommand(final LogElement log) {
+        this.getServer().getScheduler().runTaskAsynchronously(this, new Runnable() {
+            @Override
+            public void run() {
+                Date now = new Date();
+                if (getConfig().getBoolean("liteSQLdata")) {
+                    getSqllogger().Insert(log);
+                }
+                String Stream = now.toString();
+                String path = getDataFolder().toString() + "/";
+                File file1 = new File(path + "allfile" + ".txt");
+                File file = new File(path + log.getName() + ".txt");
+                if (!file.exists()) {
+                    try {
+                        file.createNewFile();
+                    } catch (IOException ex) {
+                        System.out.println("Error: " + ex.getMessage());
+                    }
+                }
+                if (!file1.exists()) {
+                    try {
+                        file1.createNewFile();
+                    } catch (IOException ex) {
+                        System.out.println("Error: " + ex.getMessage());
+                    }
+                }
+                try {
+                    // Create file
+                    FileWriter fstream = new FileWriter(file, true);
+                    PrintWriter out = new PrintWriter(fstream);
+                    out.println(
+                            "[" + Stream + "] in world: "
+                            + log.getWorld()
+                            + " X: " + (int) log.getLocation().getBlockX()
+                            + " Y: " + (int) log.getLocation().getBlockY()
+                            + " Z: " + (int) log.getLocation().getBlockZ()
+                            + " Command: " + log.getMessage());
+                    //Close the output stream
+                    out.close();
+                } catch (Exception e) {//Catch exception if any
+                    System.out.println("Error: " + e.getMessage());
+                }
+                if (getConfig().getBoolean("allfile")) {
+                    try {
+                        // Create file
+                        FileWriter fstream1 = new FileWriter(file1, true);
+                        PrintWriter out1 = new PrintWriter(fstream1);
+                        out1.println("[" + Stream + "] " + log.getName()
+                                + " in world: " + log.getWorld()
+                                + " X: " + (int) log.getLocation().getBlockX()
+                                + " Y: " + (int) log.getLocation().getBlockY()
+                                + " Z: " + (int) log.getLocation().getBlockZ()
+                                + " Command: " + log.getMessage());
+                        //Close the output stream
+                        out1.close();
+                    } catch (Exception e) {//Catch exception if any
+                        System.out.println("Error: " + e.getMessage());
+                    }
+                }
             }
-        }
-        if (!file1.exists()) {
-            try {
-                file1.createNewFile();
-            } catch (IOException ex) {
-                System.out.println("Error: " + ex.getMessage());
-            }
-        }
-        try {
-            // Create file
-            FileWriter fstream = new FileWriter(file, true);
-            PrintWriter out = new PrintWriter(fstream);
-            out.println("[" + Stream + "] in world: " + world + " X: " + X + " Y: " + Y + " Z: " + Z + " Command: " + Command);
-            //Close the output stream
-            out.close();
-        } catch (Exception e) {//Catch exception if any
-            System.out.println("Error: " + e.getMessage());
-        }
-        if (getConfig().getBoolean("allfile")) {
-            try {
-                // Create file
-                FileWriter fstream1 = new FileWriter(file1, true);
-                PrintWriter out1 = new PrintWriter(fstream1);
-                out1.println("[" + Stream + "] " + Playername + " in world: " + world + " X: " + X + " Y: " + Y + " Z: " + Z + " Command: " + Command);
-                //Close the output stream
-                out1.close();
-            } catch (Exception e) {//Catch exception if any
-                System.out.println("Error: " + e.getMessage());
-            }
-        }
+        });
     }
 
     public void dumpintofile(String input) {
