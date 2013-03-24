@@ -58,6 +58,7 @@ public class ExtendedLoggerConfig {
         config.addDefault("PlayerLevelChangeEvent", true);
         config.addDefault("PlayerQuitEvent", true);
         config.addDefault("PlayerJoinEvent", true);
+        config.addDefault("AsyncPlayerChatEvent", true);
         
         try {
             //Copy predefined values

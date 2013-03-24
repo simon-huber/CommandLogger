@@ -11,7 +11,6 @@ import me.ibhh.CommandLogger.Tools.LogElement;
 import me.ibhh.CommandLogger.Tools.TooManyElementsException;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
-import org.bukkit.World;
 
 /**
  * @author ibhh
@@ -72,7 +71,7 @@ public class SQLLogger {
             SQLErrorHandler(e);
         }
     }
-    
+
     public LogElement[] getLookupByName(String name, long time, int maxcount) throws SQLException, TooManyElementsException {
         Statement st = null;
         String sql;
@@ -83,7 +82,7 @@ public class SQLLogger {
             SQLErrorHandler(e);
         }
         sql = "SELECT * FROM CommandLoggerExtended"
-                + " WHERE date > " + (new java.util.Date().getTime() - time) + " AND name = '" + name+ "';";
+                + " WHERE date > " + (new java.util.Date().getTime() - time) + " AND name = '" + name + "';";
         result = st.executeQuery(sql);
         ArrayList<LogElement> ResultArrayList = new ArrayList<LogElement>();
         while (result.next() == true) {
@@ -131,7 +130,7 @@ public class SQLLogger {
         return Result;
     }
 
-    public boolean Insert(LogElement log) {
+    public boolean Insert(final LogElement log) {
         try {
             long time = System.nanoTime();
             plugin.Logger("Starting insert ...", "Debug");
@@ -148,6 +147,15 @@ public class SQLLogger {
             ps.close();
             plugin.Logger("executed in " + ((System.nanoTime() - time) / 1000000), "Debug");
         } catch (SQLException e) {
+            if (e.getMessage().contains("not unique")) {
+                plugin.getServer().getScheduler().runTaskLaterAsynchronously(plugin, new Runnable() {
+                    @Override
+                    public void run() {
+                        Insert(log);
+                    }
+                }, 20);
+                return false;
+            }
             System.out.println("[CommandLogger] Error while inserting into DB! - " + e.getMessage());
             SQLErrorHandler(e);
             return false;

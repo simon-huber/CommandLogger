@@ -14,6 +14,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.PlayerDeathEvent;
+import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.event.player.PlayerChannelEvent;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
@@ -164,21 +165,19 @@ public class CommandPlayerListener implements Listener {
     }
 
     @EventHandler
-    public void PlayerPickupItem(PlayerPickupItemEvent event) {
+    public void AsyncPlayerChat(AsyncPlayerChatEvent event) {
         if (plugin.getExtendedConfig().getConfig() == null) {
             return;
         }
-        if (plugin.getExtendedConfig().getConfig().getBoolean("PlayerPickupItemEvent")
+        if (plugin.getExtendedConfig().getConfig().getBoolean("AsyncPlayerChatEvent")
                 && plugin.getExtendedConfig().getConfig().getBoolean("enableExtendedLogger")) {
             plugin.writeLog(
                     new LogElement(
                     event.getPlayer().getName(),
                     event.getPlayer().getWorld().getName(),
                     event.getEventName()
-                    + " Item: \"" + event.getItem().getItemStack().getType().name()
-                    + "\" Amount: \"" + event.getItem().getItemStack().getAmount()
-                    + "\" Remaining: \"" + event.getRemaining()
-                    + "\" Pickup delay: \"" + event.getItem().getPickupDelay() + "\"",
+                    + " Message: \"" + event.getMessage() + "\""
+                    + " Format: \"" + event.getFormat() + "\"",
                     event.getPlayer().getLocation()));
         }
     }

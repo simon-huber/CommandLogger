@@ -163,7 +163,7 @@ public class CommandLogger extends JavaPlugin {
                     Logger("New version: " + newversion + " found!", "Warning");
                     Logger("******************************************", "Warning");
                     Logger("*********** Please update!!!! ************", "Warning");
-                    Logger("* http://ibhh.de/CommandLogger.jar *", "Warning");
+                    Logger("* http://dev.bukkit.org/server-mods/playercommandlogger *", "Warning");
                     Logger("******************************************", "Warning");
                     if (getConfig().getBoolean("autodownload") || getConfig().getBoolean("installondownload")) {
                         if (getConfig().getBoolean("autodownload")) {
@@ -295,7 +295,7 @@ public class CommandLogger extends JavaPlugin {
                             Logger("New version: " + newversion + " found!", "Warning");
                             Logger("******************************************", "Warning");
                             Logger("*********** Please update!!!! ************", "Warning");
-                            Logger("* http://ibhh.de/CommandLogger.jar *", "Warning");
+                            Logger("* http://dev.bukkit.org/server-mods/playercommandlogger *", "Warning");
                             Logger("******************************************", "Warning");
                             updateaviable = true;
                             if (getConfig().getBoolean("installondownload")) {
@@ -837,7 +837,6 @@ public class CommandLogger extends JavaPlugin {
                                 }
                                 return true;
                             }
-                            final int radius = Integer.parseInt(args[2]);
                             final Player p = player;
                             final String[] argsAsync = args;
                             this.getServer().getScheduler().runTaskAsynchronously(this, new Runnable() {
