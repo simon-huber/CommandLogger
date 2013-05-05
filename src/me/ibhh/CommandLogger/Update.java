@@ -129,7 +129,7 @@ class Update {
         }
     }
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({ "unchecked", "unused" })
     private void unloadPlugin(final String pluginName) throws NoSuchFieldException, IllegalAccessException {
         PluginManager manager = plugin.getServer().getPluginManager();
         SimplePluginManager spm = (SimplePluginManager) manager;

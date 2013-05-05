@@ -4,8 +4,10 @@ import java.io.File;
 import java.sql.SQLException;
 import java.util.Iterator;
 import java.util.logging.Level;
+
 import me.ibhh.CommandLogger.Commands.CommandConfigHandler;
 import me.ibhh.CommandLogger.Tools.LogElement;
+
 import org.bukkit.Bukkit;
 import org.bukkit.block.Block;
 import org.bukkit.block.Chest;
@@ -15,15 +17,12 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
-import org.bukkit.event.player.PlayerChannelEvent;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
-import org.bukkit.event.player.PlayerEvent;
 import org.bukkit.event.player.PlayerGameModeChangeEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerKickEvent;
 import org.bukkit.event.player.PlayerLevelChangeEvent;
-import org.bukkit.event.player.PlayerPickupItemEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 
 public class CommandPlayerListener implements Listener {
@@ -192,7 +191,7 @@ public class CommandPlayerListener implements Listener {
             return;
         }
         if (plugin.permissionsChecker.checkpermissionssilent(event.getPlayer(), "CommandLogger.admin")) {
-            if (plugin.updateaviable) {
+            if (CommandLogger.updateaviable) {
                 plugin.PlayerLogger(event.getPlayer(), "installed CommandLogger version: " + plugin.Version + ", latest version: " + plugin.newversion, "Warning");
                 plugin.PlayerLogger(event.getPlayer(), "New CommandLogger update aviable: type \"/CommandLogger update\" to install!", "Warning");
                 if (!plugin.getConfig().getBoolean("installondownload")) {

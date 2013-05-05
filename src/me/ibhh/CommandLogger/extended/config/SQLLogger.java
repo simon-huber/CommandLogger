@@ -63,7 +63,7 @@ public class SQLLogger {
         Statement st;
         try {
             st = cn.createStatement();
-            st.executeUpdate("CREATE TABLE IF NOT EXISTS CommandLoggerExtended ('date' LONG PRIMARY KEY NOT NULL, 'name' VARCHAR, 'world' VARCHAR, 'X' INTEGER, 'Y' INTEGER, 'Z' INTEGER, 'message' VARCHAR)");
+            st.executeUpdate("CREATE TABLE IF NOT EXISTS CommandLoggerExtended ('date' LONG, ID PRIMARY KEY AUTOINCREMENT, 'name' VARCHAR, 'world' VARCHAR, 'X' INTEGER, 'Y' INTEGER, 'Z' INTEGER, 'message' VARCHAR)");
             cn.commit();
             st.close();
         } catch (SQLException e) {
@@ -147,15 +147,6 @@ public class SQLLogger {
             ps.close();
             plugin.Logger("executed in " + ((System.nanoTime() - time) / 1000000), "Debug");
         } catch (SQLException e) {
-            if (e.getMessage().contains("not unique")) {
-                plugin.getServer().getScheduler().runTaskLaterAsynchronously(plugin, new Runnable() {
-                    @Override
-                    public void run() {
-                        Insert(log);
-                    }
-                }, 20);
-                return false;
-            }
             System.out.println("[CommandLogger] Error while inserting into DB! - " + e.getMessage());
             SQLErrorHandler(e);
             return false;
@@ -170,7 +161,7 @@ public class SQLLogger {
             } catch (ClassNotFoundException cs) {
                 plugin.Logger(cs.getMessage(), "Error");
             }
-            cn = DriverManager.getConnection("jdbc:sqlite:plugins" + File.separator + "CommandLogger" + File.separator + "CommandLoggerData.sqlite");
+            cn = DriverManager.getConnection("jdbc:sqlite:plugins" + File.separator + "CommandLogger" + File.separator + "CommandLoggerSQLLoggerData.sqlite");
             cn.setAutoCommit(false);
             return cn;
         } catch (SQLException e) {

@@ -10,7 +10,12 @@ package me.ibhh.CommandLogger.Tools;
  */
 public class LookupRadiusTooBigException extends Exception {
 
-    public LookupRadiusTooBigException(String message) {
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+
+	public LookupRadiusTooBigException(String message) {
         super(message);
     }
 }

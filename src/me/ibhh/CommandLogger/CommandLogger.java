@@ -271,7 +271,7 @@ public class CommandLogger extends JavaPlugin {
         plugman = new Utilities(this);
         playerManager = new PlayerManager(this);
         if (getConfig().getBoolean("enableingameandsql")) {
-            SQL = new SQLConnectionHandler(this);
+            SQL = new SQLConnectionHandler();
             SQL.createConnection();
             SQL.PrepareDB();
             Logger("Prepairing DB!", "");
@@ -492,9 +492,8 @@ public class CommandLogger extends JavaPlugin {
                                 Logger("Ingame enabled!", "");
                             }
                             if (permissionsChecker.checkpermissions(player, "CommandLogger.spy")) {
-                                final String[] args1 = args;
                                 final Player player1 = player;
-                                this.getServer().getScheduler().scheduleAsyncDelayedTask(this, new Runnable() {
+                                this.getServer().getScheduler().runTaskLaterAsynchronously(this, new Runnable() {
                                     @Override
                                     public void run() {
                                         try {
@@ -535,7 +534,7 @@ public class CommandLogger extends JavaPlugin {
                         if (getConfig().getBoolean("enableingameandsql")) {
                             if (permissionsChecker.checkpermissions(player, "CommandLogger.deletemyconfig")) {
                                 final Player player1 = player;
-                                this.getServer().getScheduler().scheduleAsyncDelayedTask(this, new Runnable() {
+                                this.getServer().getScheduler().runTaskLaterAsynchronously(this, new Runnable() {
                                     @Override
                                     public void run() {
                                         try {
@@ -570,7 +569,7 @@ public class CommandLogger extends JavaPlugin {
                                 if (args.length == 2) {
                                     final String[] args1 = args;
                                     final Player player1 = player;
-                                    this.getServer().getScheduler().scheduleAsyncDelayedTask(this, new Runnable() {
+                                    this.getServer().getScheduler().runTaskLaterAsynchronously(this, new Runnable() {
                                         @Override
                                         public void run() {
                                             try {
@@ -870,7 +869,7 @@ public class CommandLogger extends JavaPlugin {
                             if (permissionsChecker.checkpermissions(player, "CommandLogger.spy")) {
                                 final String[] args1 = args;
                                 final Player player1 = player;
-                                this.getServer().getScheduler().scheduleAsyncDelayedTask(this, new Runnable() {
+                                this.getServer().getScheduler().runTaskLaterAsynchronously(this, new Runnable() {
                                     @Override
                                     public void run() {
                                         try {
@@ -915,7 +914,7 @@ public class CommandLogger extends JavaPlugin {
                                 PlayerLogger(player, "Please confirm with \"/cl config confirm\" !", "Warning");
                                 PlayerLogger(player, "Please cancel with \"/cl config cancel\" !", "Warning");
                                 final Player player1 = player;
-                                getServer().getScheduler().scheduleAsyncDelayedTask(this, new Runnable() {
+                                getServer().getScheduler().runTaskLater(this, new Runnable() {
                                     @Override
                                     public void run() {
                                         if (Config.containsKey(player1)) {

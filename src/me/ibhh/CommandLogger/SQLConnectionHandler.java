@@ -9,16 +9,14 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * @author Simon
+ * @author ibhh
  *
  */
 public class SQLConnectionHandler {
 
     private Connection cn;
-    private CommandLogger auTrade;
 
-    public SQLConnectionHandler(CommandLogger AuctTrade) {
-        auTrade = AuctTrade;
+    public SQLConnectionHandler() {
         cn = null;
     }
 
@@ -26,7 +24,6 @@ public class SQLConnectionHandler {
         Statement st;
         boolean temp = false;
         try {
-            String sql = "drop table if exists CommandLogger;";
             st = cn.createStatement();
             st.executeUpdate("drop table if exists CommandLogger;");
             temp = true;

@@ -7,7 +7,7 @@ import java.io.ObjectOutputStream;
 
 /**
  *
- * @author Simon
+ * @author ibhh
  */
 public class ObjectManager {
 
@@ -25,7 +25,8 @@ public class ObjectManager {
         oos.close();
     }
 
-    public static <T extends Object> T load(String path) throws Exception {
+    @SuppressWarnings("unchecked")
+	public static <T extends Object> T load(String path) throws Exception {
         ObjectInputStream ois = new ObjectInputStream(new FileInputStream(path));
         T result = (T) ois.readObject();
         ois.close();

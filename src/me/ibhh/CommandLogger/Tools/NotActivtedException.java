@@ -10,7 +10,12 @@ package me.ibhh.CommandLogger.Tools;
  */
 public class NotActivtedException extends Exception{
 
-    public NotActivtedException(String message) {
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+
+	public NotActivtedException(String message) {
         super(message);
     }
     

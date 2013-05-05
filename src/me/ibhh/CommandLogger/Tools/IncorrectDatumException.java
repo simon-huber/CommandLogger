@@ -6,7 +6,12 @@ package me.ibhh.CommandLogger.Tools;
  */
 public class IncorrectDatumException extends Exception {
 
-    public IncorrectDatumException(String message) {
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+
+	public IncorrectDatumException(String message) {
         super(message);
     }
     

@@ -10,7 +10,12 @@ package me.ibhh.CommandLogger.Tools;
  */
 public class TooManyElementsException extends Exception {
 
-    public TooManyElementsException(String message) {
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+
+	public TooManyElementsException(String message) {
         super(message);
     }
 }
