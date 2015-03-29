@@ -47,6 +47,7 @@ public class CommandConfigHandler implements Serializable {
 		return commands.remove(in);
 	}
 
+	@SuppressWarnings("resource")
 	public void loadFromFile(String path) {
 		try {
 			File file = new File(path + File.separator

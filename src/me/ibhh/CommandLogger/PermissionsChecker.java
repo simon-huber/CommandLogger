@@ -11,9 +11,6 @@ public class PermissionsChecker {
     }
 
     public boolean checkpermissionssilent(Player player, String action) {
-        if (plugin.toggle) {
-            return false;
-        }
         if (player.isOp()) {
             return true;
         }
@@ -31,9 +28,7 @@ public class PermissionsChecker {
     }
 
     public boolean checkpermissions(Player player, String action) {
-        if (plugin.toggle) {
-            return false;
-        }
+
         if (player.isOp()) {
             return true;
         }

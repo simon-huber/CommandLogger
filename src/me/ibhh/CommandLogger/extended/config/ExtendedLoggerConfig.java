@@ -38,13 +38,12 @@ public class ExtendedLoggerConfig {
      * Creates the config and addes defaults
      */
     private void createConfig() {
-        File folder = new File(plugin.getDataFolder() + File.separator);
-        folder.mkdirs();
-        File configl = new File(plugin.getDataFolder() + File.separator + "config" + File.separator + "extendedLoggerConfig.yml");
+        File configl = new File(plugin.getDataFolder() + File.separator + "extendedLoggerConfig.yml");
         if (!configl.exists()) {
             try {
                 configl.createNewFile();
             } catch (IOException ex) {
+            	ex.printStackTrace();
                 plugin.Logger("Cannot create new config file!", "Error");
             }
         }

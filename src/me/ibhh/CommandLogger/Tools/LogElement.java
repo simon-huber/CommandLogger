@@ -1,56 +1,71 @@
 package me.ibhh.CommandLogger.Tools;
 
 import java.util.Date;
+import java.util.UUID;
+
 import org.bukkit.Location;
 
 /**
- *
  * @author ibhh
  */
-public class LogElement {
-    
-    private String name;
-    private String world;
-    private Location location;
-    private String message;
-    private long date;
+public class LogElement
+{
 
-    public LogElement(String name, String world, String message, Location location) {
-        this.name = name;
-        this.world = world;
-        this.location = location;
-        this.message = message;
-        this.date = new Date().getTime();
-    }
+	private UUID uuid;
+	private String servername;
+	private String world;
+	private Location location;
+	private String message;
+	private long date;
 
-    public LogElement(String name, String world, Location location, String message, long date) {
-        this.name = name;
-        this.world = world;
-        this.location = location;
-        this.message = message;
-        this.date = date;
-    }
-    
-    
+	public LogElement(UUID uuid, String servername, String world, String message, Location location)
+	{
+		this.uuid = uuid;
+		this.servername = servername;
+		this.world = world;
+		this.location = location;
+		this.message = message;
+		this.date = new Date().getTime();
+	}
 
-    public Location getLocation() {
-        return location;
-    }
+	public LogElement(UUID uuid, String servername, String world, Location location, String message, long date)
+	{
+		this.uuid = uuid;
+		this.servername = servername;
+		this.world = world;
+		this.location = location;
+		this.message = message;
+		this.date = date;
+	}
 
-    public String getMessage() {
-        return message;
-    }
+	public Location getLocation()
+	{
+		return location;
+	}
 
-    public String getName() {
-        return name;
-    }
+	public String getMessage()
+	{
+		return message;
+	}
 
-    public String getWorld() {
-        return world;
-    }
+	public String getServername()
+	{
+		return servername;
+	}
 
-    public long getDate() {
-        return date;
-    }
-    
+	public UUID getUuid()
+	{
+		return uuid;
+	}
+
+	public String getWorld()
+	{
+		return world;
+	}
+
+	public long getDate()
+	{
+		return date;
+	}
+
 }

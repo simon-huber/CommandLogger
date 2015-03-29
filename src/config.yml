@@ -9,10 +9,16 @@ PrefixColor: b
 TextColor: 6
 enableingameandsql: true
 showcommandsonconsole: true
+sql: false
 liteSQLdata: false
 maxLookupRadius: 20
-maxElementsPerQuery: 45
+maxElementsPerQuery: 2000
 CleanUPAfter: 4w
+mysql: false
+host: localhost
+user: root
+password: XXXXX
+database: minecraft
 permissions:
   error:
     de: Wir haben ein Problem! Dies darfst Du nicht machen!
